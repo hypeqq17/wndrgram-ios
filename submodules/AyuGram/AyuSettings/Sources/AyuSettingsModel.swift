@@ -1,0 +1,158 @@
+import Foundation
+
+public enum AyuSendWithoutSoundOption: Int32, Codable {
+    case never = 0
+    case always = 1
+    case whenGhostModeIsOn = 2
+}
+
+public enum AyuPeerIdDisplay: Int32, Codable {
+    case hidden = 0
+    case botApi = 1
+    case telegram = 2
+}
+
+/// Full settings payload. Adding a field here is safe: decoding uses
+/// per-field defaults, so older settings files keep loading.
+public struct AyuSettingsData: Codable, Equatable {
+    // MARK: Ghost mode
+    public var sendReadMessages: Bool = true
+    public var sendReadStories: Bool = true
+    public var sendOnlinePackets: Bool = true
+    public var sendUploadProgress: Bool = true
+    public var sendTypingStatus: Bool = true
+    public var sendOfflinePacketAfterOnline: Bool = false
+    public var markReadAfterAction: Bool = true
+    public var useScheduledMessages: Bool = false
+    public var sendWithoutSound: AyuSendWithoutSoundOption = .never
+    public var suggestGhostModeBeforeViewingStory: Bool = true
+
+    // MARK: History / local archive
+    public var saveDeletedMessages: Bool = true
+    public var saveMessagesHistory: Bool = true
+    public var saveForBots: Bool = false
+    public var saveDeletedMedia: Bool = true
+    public var historyRetentionDays: Int32 = 0 // 0 == forever
+
+    // MARK: Chat appearance
+    public var deletedMark: String = "\u{1F9F9}"
+    public var editedMark: String = ""
+    public var showDeletedMessages: Bool = true
+    public var semiTransparentDeletedMessages: Bool = false
+    public var showMessageSeconds: Bool = false
+    public var showPeerId: AyuPeerIdDisplay = .botApi
+    public var messageBubbleRadius: Int32 = 16
+    public var avatarCorners: Int32 = 23
+    public var hideAllChatsFolder: Bool = false
+    public var disableStories: Bool = false
+    public var disableAds: Bool = true
+    public var hideNotificationCounters: Bool = false
+    public var collapseSimilarChannels: Bool = true
+
+    // MARK: Behaviour
+    public var disableOpenLinkWarning: Bool = false
+    public var disableGreetingSticker: Bool = false
+    public var stickerConfirmation: Bool = false
+    public var gifConfirmation: Bool = false
+    public var voiceConfirmation: Bool = false
+    public var roundConfirmation: Bool = false
+    public var unlimitedRecentStickers: Bool = false
+    public var localPremium: Bool = false
+
+    // MARK: Ayu extras (not present in AyuGram Desktop)
+    /// Do not let a chat be marked read when the app is opened from a notification.
+    public var keepUnreadOnNotificationOpen: Bool = false
+    /// Blur the app contents while it sits in the app switcher.
+    public var privacyScreenInAppSwitcher: Bool = false
+    /// Hide message contents from screenshots and screen recordings.
+    public var streamerMode: Bool = false
+    /// Require Face ID to reveal the locally archived deleted messages.
+    public var lockMessageArchive: Bool = false
+
+    public var ghostModeActive: Bool = false
+
+    public init() {}
+
+    // Explicit decoder so a missing or unknown key never fails the whole file.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let d = AyuSettingsData()
+        func b(_ key: CodingKeys, _ fallback: Bool) -> Bool {
+            return ((try? c.decodeIfPresent(Bool.self, forKey: key)) ?? nil) ?? fallback
+        }
+        func i(_ key: CodingKeys, _ fallback: Int32) -> Int32 {
+            return ((try? c.decodeIfPresent(Int32.self, forKey: key)) ?? nil) ?? fallback
+        }
+        func s(_ key: CodingKeys, _ fallback: String) -> String {
+            return ((try? c.decodeIfPresent(String.self, forKey: key)) ?? nil) ?? fallback
+        }
+
+        self.sendReadMessages = b(.sendReadMessages, d.sendReadMessages)
+        self.sendReadStories = b(.sendReadStories, d.sendReadStories)
+        self.sendOnlinePackets = b(.sendOnlinePackets, d.sendOnlinePackets)
+        self.sendUploadProgress = b(.sendUploadProgress, d.sendUploadProgress)
+        self.sendTypingStatus = b(.sendTypingStatus, d.sendTypingStatus)
+        self.sendOfflinePacketAfterOnline = b(.sendOfflinePacketAfterOnline, d.sendOfflinePacketAfterOnline)
+        self.markReadAfterAction = b(.markReadAfterAction, d.markReadAfterAction)
+        self.useScheduledMessages = b(.useScheduledMessages, d.useScheduledMessages)
+        self.sendWithoutSound = AyuSendWithoutSoundOption(rawValue: i(.sendWithoutSound, d.sendWithoutSound.rawValue)) ?? d.sendWithoutSound
+        self.suggestGhostModeBeforeViewingStory = b(.suggestGhostModeBeforeViewingStory, d.suggestGhostModeBeforeViewingStory)
+
+        self.saveDeletedMessages = b(.saveDeletedMessages, d.saveDeletedMessages)
+        self.saveMessagesHistory = b(.saveMessagesHistory, d.saveMessagesHistory)
+        self.saveForBots = b(.saveForBots, d.saveForBots)
+        self.saveDeletedMedia = b(.saveDeletedMedia, d.saveDeletedMedia)
+        self.historyRetentionDays = i(.historyRetentionDays, d.historyRetentionDays)
+
+        self.deletedMark = s(.deletedMark, d.deletedMark)
+        self.editedMark = s(.editedMark, d.editedMark)
+        self.showDeletedMessages = b(.showDeletedMessages, d.showDeletedMessages)
+        self.semiTransparentDeletedMessages = b(.semiTransparentDeletedMessages, d.semiTransparentDeletedMessages)
+        self.showMessageSeconds = b(.showMessageSeconds, d.showMessageSeconds)
+        self.showPeerId = AyuPeerIdDisplay(rawValue: i(.showPeerId, d.showPeerId.rawValue)) ?? d.showPeerId
+        self.messageBubbleRadius = i(.messageBubbleRadius, d.messageBubbleRadius)
+        self.avatarCorners = i(.avatarCorners, d.avatarCorners)
+        self.hideAllChatsFolder = b(.hideAllChatsFolder, d.hideAllChatsFolder)
+        self.disableStories = b(.disableStories, d.disableStories)
+        self.disableAds = b(.disableAds, d.disableAds)
+        self.hideNotificationCounters = b(.hideNotificationCounters, d.hideNotificationCounters)
+        self.collapseSimilarChannels = b(.collapseSimilarChannels, d.collapseSimilarChannels)
+
+        self.disableOpenLinkWarning = b(.disableOpenLinkWarning, d.disableOpenLinkWarning)
+        self.disableGreetingSticker = b(.disableGreetingSticker, d.disableGreetingSticker)
+        self.stickerConfirmation = b(.stickerConfirmation, d.stickerConfirmation)
+        self.gifConfirmation = b(.gifConfirmation, d.gifConfirmation)
+        self.voiceConfirmation = b(.voiceConfirmation, d.voiceConfirmation)
+        self.roundConfirmation = b(.roundConfirmation, d.roundConfirmation)
+        self.unlimitedRecentStickers = b(.unlimitedRecentStickers, d.unlimitedRecentStickers)
+        self.localPremium = b(.localPremium, d.localPremium)
+
+        self.keepUnreadOnNotificationOpen = b(.keepUnreadOnNotificationOpen, d.keepUnreadOnNotificationOpen)
+        self.privacyScreenInAppSwitcher = b(.privacyScreenInAppSwitcher, d.privacyScreenInAppSwitcher)
+        self.streamerMode = b(.streamerMode, d.streamerMode)
+        self.lockMessageArchive = b(.lockMessageArchive, d.lockMessageArchive)
+
+        self.ghostModeActive = b(.ghostModeActive, d.ghostModeActive)
+    }
+}
+
+public extension AyuSettingsData {
+    /// Ghost mode is "on" exactly when every outgoing presence signal is muted.
+    /// Derived rather than stored, so toggling an individual switch updates it.
+    var isGhostModeEnabled: Bool {
+        return !self.sendReadMessages
+            && !self.sendOnlinePackets
+            && !self.sendUploadProgress
+            && !self.sendTypingStatus
+            && !self.sendReadStories
+    }
+
+    mutating func setGhostMode(_ enabled: Bool) {
+        self.sendReadMessages = !enabled
+        self.sendOnlinePackets = !enabled
+        self.sendUploadProgress = !enabled
+        self.sendTypingStatus = !enabled
+        self.sendReadStories = !enabled
+        self.ghostModeActive = enabled
+    }
+}
