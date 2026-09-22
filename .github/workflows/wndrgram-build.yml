@@ -40,12 +40,27 @@ jobs:
           sudo rm -rf /usr/local/share/android-sdk ~/Library/Android /usr/local/lib/node_modules || true
           df -h /
 
+      - name: Restore Bazel cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/telegram-bazel-cache
+          key: bazel-v1-${{ github.sha }}
+          restore-keys: |
+            bazel-v1-
+
       - name: Build IPA
         env:
           WNDRGRAM_WORK_DIR: ${{ runner.temp }}/WndrGram-iOS
         run: |
           chmod +x wndrgram-mac-build.sh
           ./wndrgram-mac-build.sh --device
+
+      - name: Save Bazel cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/telegram-bazel-cache
+          key: bazel-v1-${{ github.sha }}
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
