@@ -61,6 +61,13 @@ rsync -a \
 
 cd "$WORK_DIR"
 
+echo "==> Restoring executable bits"
+# This tree came from a zip made on Windows, so the copy above strips the
+# executable bit from every build script; take the modes from upstream git.
+git ls-files -s | awk '$1 == "100755" { print $4 }' | while IFS= read -r f; do
+    [ -f "$f" ] && chmod +x "$f"
+done
+
 echo "==> Importing Telegram's test signing certificates into the keychain"
 python3 build-system/Make/ImportCertificates.py --path build-system/fake-codesigning/certs
 
