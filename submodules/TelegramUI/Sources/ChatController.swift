@@ -5,6 +5,7 @@ import SwiftSignalKit
 import Display
 import AsyncDisplayKit
 import TelegramCore
+import AyuSettings
 import SafariServices
 import MobileCoreServices
 import Intents
@@ -238,7 +239,12 @@ struct ScrolledToMessageId: Equatable {
     var allowedReplacementDirection: AllowedReplacementDirections
 }
 
-public final class ChatControllerImpl: TelegramBaseController, ChatController, GalleryHiddenMediaTarget, UIDropInteractionDelegate {    
+public final class ChatControllerImpl: TelegramBaseController, ChatController, GalleryHiddenMediaTarget, UIDropInteractionDelegate {
+    /// Set while re-running a send the user just confirmed (WndrGram).
+    var ayuSendConfirmationBypass = false
+    /// True while this chat must not mark messages read (WndrGram).
+    let ayuSuppressReadHistory = ValuePromise<Bool>(false, ignoreRepeated: true)
+    
     var validLayout: ContainerViewLayout?
     
     public weak var parentController: ViewController?
@@ -2301,6 +2307,12 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                 return false
             }
             
+            if !strongSelf.ayuConfirmSend(enabled: AyuSettings.current.stickerConfirmation, text: "Отправить стикер?", perform: { [weak strongSelf] in
+                let _ = strongSelf?.controllerInteraction?.sendSticker(fileReference, silentPosting, schedule, query, clearInput, sourceView, sourceRect, sourceLayer, bubbleUpEmojiOrStickersets)
+            }) {
+                return false
+            }
+            
             if let _ = strongSelf.presentationInterfaceState.slowmodeState, strongSelf.presentationInterfaceState.subject != .scheduledMessages {
                 if let sourceView, let sourceRect {
                     strongSelf.interfaceInteraction?.displaySlowmodeTooltip(sourceView, sourceRect)
@@ -2576,6 +2588,12 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
             }
         }, sendGif: { [weak self] fileReference, sourceView, sourceRect, silentPosting, schedule in
             if let strongSelf = self {
+                if !strongSelf.ayuConfirmSend(enabled: AyuSettings.current.gifConfirmation, text: "Отправить GIF?", perform: { [weak strongSelf] in
+                    let _ = strongSelf?.controllerInteraction?.sendGif(fileReference, sourceView, sourceRect, silentPosting, schedule)
+                }) {
+                    return false
+                }
+                
                 if let _ = strongSelf.presentationInterfaceState.slowmodeState, strongSelf.presentationInterfaceState.subject != .scheduledMessages {
                     strongSelf.interfaceInteraction?.displaySlowmodeTooltip(sourceView, sourceRect)
                     return false
@@ -6885,12 +6903,18 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
         
 
         
+        if let peerId = self.chatLocation.peerId, AyuNotificationOpenState.consume(peerId: peerId) {
+            // WndrGram: opened from a notification with "keep unread" on.
+            self.ayuSuppressReadHistory.set(true)
+        }
+        
         self.canReadHistoryDisposable = (combineLatest(
             context.sharedContext.applicationBindings.applicationInForeground,
             self.canReadHistory.get(),
-            self.hasBrowserOrAppInFront.get()
-        ) |> map { inForeground, globallyEnabled, hasBrowserOrWebAppInFront in
-            return inForeground && globallyEnabled && !hasBrowserOrWebAppInFront
+            self.hasBrowserOrAppInFront.get(),
+            self.ayuSuppressReadHistory.get()
+        ) |> map { inForeground, globallyEnabled, hasBrowserOrWebAppInFront, ayuSuppressed in
+            return inForeground && globallyEnabled && !hasBrowserOrWebAppInFront && !ayuSuppressed
         } |> deliverOnMainQueue).startStrict(next: { [weak self] value in
             if let strongSelf = self, strongSelf.canReadHistoryValue != value {
                 strongSelf.canReadHistoryValue = value

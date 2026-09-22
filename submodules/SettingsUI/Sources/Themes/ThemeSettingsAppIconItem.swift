@@ -374,34 +374,34 @@ class ThemeSettingsAppIconItemNode: ListViewItemNode, ItemListItemNode {
                             let selected = icon.name == item.currentIconName
 
                             var name = "Icon"
-                            var bordered = true
+                            let bordered = false
                             switch icon.name {
                                 case "BlueIcon":
-                                    name = item.strings.Appearance_AppIconDefault
+                                    name = "WndrGram"
                                 case "BlackIcon":
-                                    name = item.strings.Appearance_AppIconDefaultX
+                                    name = "Alt"
                                 case "BlueClassicIcon":
-                                    name = item.strings.Appearance_AppIconClassic
+                                    name = "Bard"
                                 case "BlackClassicIcon":
-                                    name = item.strings.Appearance_AppIconClassicX
+                                    name = "Discord"
                                 case "BlueFilledIcon":
-                                    name = item.strings.Appearance_AppIconFilled
-                                    bordered = false
+                                    name = "exteraGram"
                                 case "BlackFilledIcon":
-                                    name = item.strings.Appearance_AppIconFilledX
-                                    bordered = false
+                                    name = "extera 2"
                                 case "WhiteFilled":
-                                    name = "⍺ White"
+                                    name = "Nothing"
                                 case "New1":
-                                    name = item.strings.Appearance_AppIconNew1
+                                    name = "Spotify"
                                 case "New2":
-                                    name = item.strings.Appearance_AppIconNew2
+                                    name = "Я+"
                                 case "Premium":
-                                    name = item.strings.Appearance_AppIconPremium
+                                    name = "Chibi"
                                 case "PremiumBlack":
-                                    name = item.strings.Appearance_AppIconBlack
+                                    name = "Chibi 2"
                                 case "PremiumTurbo":
-                                    name = item.strings.Appearance_AppIconTurbo
+                                    name = "Win95"
+                                case "WhiteFilledIcon":
+                                    name = "Nothing"
                                 default:
                                     name = icon.name
                             }

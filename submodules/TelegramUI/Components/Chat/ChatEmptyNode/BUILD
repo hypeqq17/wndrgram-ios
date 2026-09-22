@@ -14,6 +14,7 @@ swift_library(
         "//submodules/Display",
         "//submodules/SSignalKit/SwiftSignalKit",
         "//submodules/TelegramCore",
+        "//submodules/AyuGram/AyuSettings:AyuSettings",
         "//submodules/TelegramPresentationData",
         "//submodules/AppBundle",
         "//submodules/LocalizedPeerData",

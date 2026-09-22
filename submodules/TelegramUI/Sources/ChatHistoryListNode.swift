@@ -4,6 +4,7 @@ import SwiftSignalKit
 import Display
 import AsyncDisplayKit
 import TelegramCore
+import AyuSettings
 import TelegramPresentationData
 import TelegramUIPreferences
 import MediaResources
@@ -1847,7 +1848,7 @@ public final class ChatHistoryListNodeImpl: ASDisplayNode, ChatHistoryNode, Chat
         }
         
         let recommendedChannels: Signal<RecommendedChannels?, NoError>
-        if let peerId = self.chatLocation.peerId, peerId.namespace == Namespaces.Peer.CloudChannel {
+        if let peerId = self.chatLocation.peerId, peerId.namespace == Namespaces.Peer.CloudChannel, !AyuSettings.current.collapseSimilarChannels {
             recommendedChannels = self.context.engine.peers.recommendedChannels(peerId: peerId)
         } else {
             recommendedChannels = .single(nil)

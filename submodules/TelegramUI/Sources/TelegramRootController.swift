@@ -234,7 +234,15 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
             guard let strongSelf = self else {
                 return
             }
-            strongSelf.pushViewController(debugController(sharedContext: strongSelf.context.sharedContext, context: strongSelf.context))
+            // WndrGram: the hidden ten-tap gesture opens the WndrGram menu; the
+            // stock debug menu stays reachable from its "Config" tab.
+            let context = strongSelf.context
+            strongSelf.pushViewController(AyuMenuController(context: context, openDebugMenu: { [weak strongSelf] in
+                guard let strongSelf else {
+                    return
+                }
+                strongSelf.pushViewController(debugController(sharedContext: context.sharedContext, context: context))
+            }))
         }
         accountSettingsController.parentController = self
         controllers.append(accountSettingsController)

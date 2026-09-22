@@ -240,7 +240,7 @@ func settingsItems(data: PeerInfoScreenData?, context: AccountContext, presentat
     items[.advanced]!.append(PeerInfoScreenDisclosureItem(id: 3, text: presentationData.strings.Settings_Appearance, icon: PresentationResourcesSettings.appearance, action: {
         interaction.openSettings(.appearance)
     }))
-    items[.advanced]!.append(PeerInfoScreenDisclosureItem(id: 7, label: .text(AyuSettings.current.isGhostModeEnabled ? "Ghost" : ""), text: "AyuGram", icon: PresentationResourcesSettings.dataAndStorage, action: {
+    items[.advanced]!.append(PeerInfoScreenDisclosureItem(id: 7, label: .text(AyuSettings.current.isGhostModeEnabled ? "Ghost" : ""), text: "WndrGram", icon: PresentationResourcesSettings.dataAndStorage, action: {
         interaction.openSettings(.ayuGram)
     }))
 

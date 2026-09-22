@@ -4,6 +4,7 @@ import SwiftSignalKit
 import Display
 import AsyncDisplayKit
 import TelegramCore
+import AyuSettings
 import SafariServices
 import MobileCoreServices
 import Intents
@@ -260,6 +261,15 @@ extension ChatControllerImpl {
         if let _ = self.presentationInterfaceState.sendPaidMessageStars, case .send = action {
             updatedAction = .preview
             sendImmediately = true
+        }
+        
+        if case .send = updatedAction, !sendImmediately {
+            let ayuSettings = AyuSettings.current
+            if (self.audioRecorderValue != nil && ayuSettings.voiceConfirmation) || (self.videoRecorderValue != nil && ayuSettings.roundConfirmation) {
+                // WndrGram: stop into the preview instead, so sending the
+                // recording takes a second, deliberate tap.
+                updatedAction = .preview
+            }
         }
         
         if let audioRecorderValue = self.audioRecorderValue {

@@ -1,4 +1,10 @@
-# AyuGram for iOS
+# WndrGram for iOS
+
+User-facing name: **WndrGram** (display name in `Telegram/BUILD` and
+`*.lproj/InfoPlist.strings`). Internal module names keep the `Ayu` prefix.
+App icons are the AyuGram icon set, dropped into the existing `.alticon`
+folders and `Telegram.icon` (single full-bleed layer).
+
 
 A port of [AyuGram Desktop](https://github.com/AyuGram/AyuGramDesktop)'s behaviour
 onto the Telegram-iOS codebase. There is no official AyuGram for iOS; this is a
@@ -76,20 +82,52 @@ themselves, and what the settings screen reports the size of.
 Foundation, so Postbox stays at the bottom of the module graph — and note that
 Postbox builds with `-warnings-as-errors`.
 
+## AyuGram menu
+
+`SettingsUI/Sources/AyuMenuController.swift` is a Telegram-styled settings
+list (theme colours, inset grouped sections) built from UIKit controls so it
+can offer switches, sliders, segmented controls and text fields. It opens from
+the "AyuGram" settings row and from tapping the Settings tab ten times (which
+used to open Telegram's debug menu; that is now a button at the bottom).
+Config also exports/imports the settings JSON via the clipboard.
+
+Wired in this pass: deleted-message dimming with adjustable opacity
+(`ChatMessageItemView.setupItem`), send-without-sound (`EnqueueMessage.swift`),
+skip hidden-link warning (`SharedAccountContext`, `TextLinkHandling`), app
+switcher blur and streamer mode (`TelegramUI/Sources/AyuPrivacyShield.swift`).
+User-initiated deletions are exempt from in-chat retention
+(`ayuPerformUserInitiatedDeletion`).
+
 ## Building
 
-The build only runs on macOS — see the root `CLAUDE.md` for the `Make.py`
-invocation. `.github/workflows/ayugram-build.yml` runs it on a macOS runner and
-needs two secrets: `TELEGRAM_CODESIGNING_GIT_PASSWORD` and
-`TELEGRAM_CODESIGNING_REPOSITORY`.
+The build only runs on macOS. This tree came from a GitHub zip (upstream
+commit `6ad963e5b62d354da79040f388ae2b9132fb17b8`) and has **empty submodule
+folders**; `wndrgram-mac-build.sh` clones upstream at that commit with all
+submodules, rsyncs this tree on top and builds with Telegram's test signing
+(`build-system/fake-codesigning`, imported via `ImportCertificates.py`).
+`--device` produces a test-signed `release_arm64` IPA meant to be re-signed
+with Sideloadly/AltStore. The GitHub workflow does the same and uploads the IPA.
 
 ## Not yet ported
 
 - Per-account ghost mode (currently one global setting).
 - The deleted-message *filter* UI (AyuGram's per-chat filters / shadow bans).
-- Message-shot (screenshot a selection of messages), translation providers,
-  custom app icons, local premium, the drawer/tray toggles.
-- The appearance toggles that are stored but not yet read by the UI:
-  bubble radius, avatar corners, hide "All Chats", hide stories, sponsored
-  messages, and the behaviour section. They persist correctly but still need
-  their read sites wired up.
+- Message-shot, translation providers, custom app icons.
+- Every `AyuSettingsData` field is now exposed and wired (see below).
+
+Every option shown in `AyuMenuController` is wired: bubble radius writes
+through to Telegram's own `chatBubbleSettings`; peer id is a row in
+`PeerInfoProfileItems.infoItems`; send confirmations are
+`ChatControllerImpl.ayuConfirmSend` (stickers, GIFs) and a forced preview in
+`dismissMediaRecorder` (voice, round video); greeting sticker is
+`ChatEmptyNode`; recent stickers limit is `ayuRecentStickersLimit`; keep
+unread from notification is `AyuNotificationOpenState` +
+`ChatControllerImpl.ayuSuppressReadHistory`; send-as-scheduled and
+read-after-action are `ayuApplyScheduledSending` / `ayuReadAfterAction` in
+`EnqueueMessage.swift`; counters are the tab badge (`ChatListController`), the
+icon badge (`AppDelegate.resetBadge`) and `ayuNotificationBadge` in the
+notification extension; similar channels are dropped in `ChatHistoryListNode`;
+the story ghost prompt is `ChatListControllerImpl.openStories`; local premium
+is `AccountContextImpl.isPremium`; avatar roundness is `ayuAvatarPath` in
+`AvatarNode` (photos, letters, masks); the archive browser with optional
+Face ID lock is `SettingsUI/Sources/AyuArchiveController.swift`.

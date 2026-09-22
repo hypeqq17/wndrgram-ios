@@ -1,0 +1,63 @@
+name: WndrGram iOS build
+
+# Builds a test-signed IPA on a GitHub macOS runner, so the project can be
+# built from Windows. The repo has no git submodules (it came from a zip), so
+# wndrgram-mac-build.sh clones upstream Telegram-iOS at the matching commit,
+# pulls the submodules and overlays this tree before building.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 360
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode 26.2 (or the newest 26.x)
+        run: |
+          XCODE="$(ls -d /Applications/Xcode_26.2*.app 2>/dev/null | head -1)"
+          if [ -z "$XCODE" ]; then
+            XCODE="$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)"
+          fi
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE/Contents/Developer"
+          xcodebuild -version
+
+      - name: Free disk space
+        run: |
+          df -h /
+          # Other Xcode versions and simulator runtimes are the largest
+          # removable items on the runner image.
+          CURRENT="$(xcode-select -p | sed 's#/Contents/Developer##')"
+          for x in /Applications/Xcode*.app; do
+            if [ "$x" != "$CURRENT" ] && [ ! -L "$x" ]; then sudo rm -rf "$x"; fi
+          done
+          xcrun simctl delete all || true
+          sudo rm -rf ~/Library/Developer/CoreSimulator/Caches || true
+          sudo rm -rf /usr/local/share/android-sdk ~/Library/Android /usr/local/lib/node_modules || true
+          df -h /
+
+      - name: Build IPA
+        env:
+          WNDRGRAM_WORK_DIR: ${{ runner.temp }}/WndrGram-iOS
+        run: |
+          chmod +x wndrgram-mac-build.sh
+          ./wndrgram-mac-build.sh --device
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: WndrGram-ipa
+          path: ${{ runner.temp }}/WndrGram-iOS/out/*.ipa
+          if-no-files-found: error
+
+      - name: Upload build log on failure
+        if: failure()
+        run: df -h /

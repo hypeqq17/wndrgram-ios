@@ -3,6 +3,7 @@ import UIKit
 import AsyncDisplayKit
 import Display
 import TelegramCore
+import AyuSettings
 import Postbox
 import SwiftSignalKit
 import TelegramPresentationData
@@ -260,8 +261,7 @@ public final class AvatarEditOverlayNode: ASDisplayNode {
         }
         
         context.beginPath()
-        context.addEllipse(in: CGRect(x: 0.0, y: 0.0, width: bounds.size.width, height:
-            bounds.size.height))
+        context.addPath(ayuAvatarPath(rect: CGRect(x: 0.0, y: 0.0, width: bounds.size.width, height: bounds.size.height)))
         context.clip()
         
         context.setFillColor(UIColor(rgb: 0x000000, alpha: 0.4).cgColor)
@@ -734,7 +734,7 @@ public final class AvatarNode: ASDisplayNode {
                 self.imageNode.cornerRadius = 0.0
             case .round:
                 self.imageNode.clipsToBounds = true
-                self.imageNode.cornerRadius = displayDimensions.height * 0.5
+                self.imageNode.cornerRadius = ayuAvatarCornerRadius(size: displayDimensions.height)
             case .roundedRect:
                 self.imageNode.clipsToBounds = true
                 self.imageNode.cornerRadius = displayDimensions.height * 0.25
@@ -966,8 +966,7 @@ public final class AvatarNode: ASDisplayNode {
                 
                 if case .round = parameters.clipStyle {
                     context.beginPath()
-                    context.addEllipse(in: CGRect(x: 0.0, y: 0.0, width: bounds.size.width, height:
-                        bounds.size.height))
+                    context.addPath(ayuAvatarPath(rect: CGRect(x: 0.0, y: 0.0, width: bounds.size.width, height: bounds.size.height)))
                     context.clip()
                 } else if case .roundedRect = parameters.clipStyle {
                     context.beginPath()
@@ -1552,3 +1551,21 @@ public final class AvatarNode: ASDisplayNode {
     }
 }
 
+
+/// WndrGram avatar shape. Every "round" avatar goes through these, so the
+/// roundness setting applies to photos, letter placeholders and their masks.
+public func ayuAvatarCornerRadius(size: CGFloat) -> CGFloat {
+    let roundness = CGFloat(max(0, min(50, AyuSettings.current.avatarRoundness)))
+    return size * roundness / 100.0
+}
+
+public var ayuAvatarIsCircle: Bool {
+    return AyuSettings.current.avatarRoundness >= 50
+}
+
+public func ayuAvatarPath(rect: CGRect) -> CGPath {
+    if ayuAvatarIsCircle {
+        return CGPath(ellipseIn: rect, transform: nil)
+    }
+    return UIBezierPath(roundedRect: rect, cornerRadius: ayuAvatarCornerRadius(size: min(rect.width, rect.height))).cgPath
+}

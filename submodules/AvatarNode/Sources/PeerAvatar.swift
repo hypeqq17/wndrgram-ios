@@ -201,8 +201,8 @@ public func peerAvatarImage(postbox: Postbox, peerReference: PeerReference?, aut
                             case .none:
                                 break
                             case .round:
-                                if displayDimensions.width != 60.0 {
-                                    context.addEllipse(in: CGRect(origin: CGPoint(), size: displayDimensions).insetBy(dx: inset, dy: inset))
+                                if displayDimensions.width != 60.0 || !ayuAvatarIsCircle {
+                                    context.addPath(ayuAvatarPath(rect: CGRect(origin: CGPoint(), size: displayDimensions).insetBy(dx: inset, dy: inset)))
                                     context.clip()
                                 }
                             case .roundedRect:
@@ -263,7 +263,7 @@ public func peerAvatarImage(postbox: Postbox, peerReference: PeerReference?, aut
                             case .none:
                                 break
                             case .round:
-                                if displayDimensions.width == 60.0 {
+                                if displayDimensions.width == 60.0 && ayuAvatarIsCircle {
                                     context.setBlendMode(.destinationOut)
                                     context.draw(roundCorners.cgImage!, in: CGRect(origin: CGPoint(), size: displayDimensions).insetBy(dx: inset, dy: inset))
                                 }
@@ -280,7 +280,8 @@ public func peerAvatarImage(postbox: Postbox, peerReference: PeerReference?, aut
                                 case .none:
                                     context.fill(CGRect(origin: CGPoint(), size: displayDimensions).insetBy(dx: inset, dy: inset))
                                 case .round:
-                                    context.fillEllipse(in: CGRect(origin: CGPoint(), size: displayDimensions).insetBy(dx: inset, dy: inset))
+                                    context.addPath(ayuAvatarPath(rect: CGRect(origin: CGPoint(), size: displayDimensions).insetBy(dx: inset, dy: inset)))
+                                    context.fillPath()
                                 case .roundedRect:
                                     context.beginPath()
                                     context.addPath(UIBezierPath(roundedRect: CGRect(x: 0.0, y: 0.0, width: displayDimensions.width, height: displayDimensions.height).insetBy(dx: inset, dy: inset), cornerRadius: floor(displayDimensions.width * 0.25)).cgPath)
@@ -306,7 +307,8 @@ public func peerAvatarImage(postbox: Postbox, peerReference: PeerReference?, aut
                         case .none:
                             context.fill(CGRect(origin: CGPoint(), size: displayDimensions).insetBy(dx: inset, dy: inset))
                         case .round:
-                            context.fillEllipse(in: CGRect(origin: CGPoint(), size: displayDimensions).insetBy(dx: inset, dy: inset))
+                            context.addPath(ayuAvatarPath(rect: CGRect(origin: CGPoint(), size: displayDimensions).insetBy(dx: inset, dy: inset)))
+                                    context.fillPath()
                         case .roundedRect:
                             context.beginPath()
                             context.addPath(UIBezierPath(roundedRect: CGRect(x: 0.0, y: 0.0, width: displayDimensions.width, height: displayDimensions.height).insetBy(dx: inset, dy: inset), cornerRadius: floor(displayDimensions.width * 0.25)).cgPath)
@@ -354,7 +356,8 @@ public func peerAvatarImage(postbox: Postbox, peerReference: PeerReference?, aut
                             case .none:
                                 context.fill(CGRect(origin: CGPoint(), size: displayDimensions).insetBy(dx: inset, dy: inset))
                             case .round:
-                                context.fillEllipse(in: CGRect(origin: CGPoint(), size: displayDimensions).insetBy(dx: inset, dy: inset))
+                                context.addPath(ayuAvatarPath(rect: CGRect(origin: CGPoint(), size: displayDimensions).insetBy(dx: inset, dy: inset)))
+                                    context.fillPath()
                             case .roundedRect:
                                 context.beginPath()
                                 context.addPath(UIBezierPath(roundedRect: CGRect(x: 0.0, y: 0.0, width: displayDimensions.width, height: displayDimensions.height).insetBy(dx: inset, dy: inset), cornerRadius: floor(displayDimensions.width * 0.25)).cgPath)

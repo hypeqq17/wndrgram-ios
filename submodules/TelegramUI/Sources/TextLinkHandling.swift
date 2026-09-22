@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 import TelegramCore
+import AyuSettings
 import Display
 import SwiftSignalKit
 import TelegramUIPreferences
@@ -140,7 +141,7 @@ func handleTextLinkActionImpl(context: AccountContext, peerId: EnginePeer.Id?, n
                         concealed = true
                     }
                     
-                    if concealed {
+                    if concealed && !AyuSettings.current.disableOpenLinkWarning {
                         var rawDisplayUrl: String = parsedString
                         let maxLength = 180
                         if rawDisplayUrl.count > maxLength {

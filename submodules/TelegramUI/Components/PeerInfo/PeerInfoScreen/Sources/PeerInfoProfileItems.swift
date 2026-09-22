@@ -4,6 +4,7 @@ import Display
 import AccountContext
 import TelegramPresentationData
 import TelegramCore
+import AyuSettings
 import PeerInfoUI
 import TextFormat
 import PhoneNumberFormat
@@ -901,6 +902,16 @@ func infoItems(
                 interaction.performMemberAction(member, .openStories(sourceView: sourceView))
             }))
         }
+    }
+    
+    if let peer = data.peer, let peerIdText = ayuFormattedPeerId(peer.id) {
+        // WndrGram: show the numeric id; tapping copies it.
+        items[currentPeerInfoSection]!.append(PeerInfoScreenLabeledValueItem(id: 90001, label: "ID", text: peerIdText, textColor: .primary, action: { _, _ in
+            UIPasteboard.general.string = peerIdText
+            ayuPeerIdHaptic.success()
+        }, longTapAction: nil, requestLayout: { animated in
+            interaction.requestLayout(animated)
+        }))
     }
     
     var result: [(AnyHashable, [PeerInfoScreenItem])] = []
@@ -1841,4 +1852,27 @@ func editingItems(data: PeerInfoScreenData?, boostStatus: ChannelBoostStatus?, s
         }
     }
     return result
+}
+
+private let ayuPeerIdHaptic = HapticFeedback()
+
+/// Formats a peer id the way WndrGram's "Show Peer ID" option asks for, or nil
+/// when the option is off.
+private func ayuFormattedPeerId(_ peerId: EnginePeer.Id) -> String? {
+    let rawId = peerId.id._internalGetInt64Value()
+    switch AyuSettings.current.showPeerId {
+    case .hidden:
+        return nil
+    case .telegram:
+        return "\(rawId)"
+    case .botApi:
+        switch peerId.namespace {
+        case Namespaces.Peer.CloudGroup:
+            return "-\(rawId)"
+        case Namespaces.Peer.CloudChannel:
+            return "-100\(rawId)"
+        default:
+            return "\(rawId)"
+        }
+    }
 }

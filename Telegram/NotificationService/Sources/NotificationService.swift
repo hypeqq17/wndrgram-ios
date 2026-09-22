@@ -646,7 +646,7 @@ private struct NotificationContent: CustomStringConvertible {
             content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: sound))
         }
         if let badge = self.badge {
-            content.badge = badge as NSNumber
+            content.badge = ayuNotificationBadge(badge) as NSNumber
         }
         if let category = self.category {
             content.categoryIdentifier = category
@@ -1802,7 +1802,7 @@ private final class NotificationServiceHandler {
                                                 }
 
                                                 if isCurrentAccount {
-                                                    content.badge = Int(value.0)
+                                                    content.badge = ayuNotificationBadge(Int(value.0))
                                                 }
 
                                                 Logger.shared.log("NotificationService \(episode)", "Unread count: \(value.0), isCurrentAccount: \(isCurrentAccount)")
@@ -2360,7 +2360,7 @@ private final class NotificationServiceHandler {
                                         |> deliverOn(strongSelf.queue)).start(next: { value in
                                             var content = NotificationContent(isLockedMessage: nil)
                                             if isCurrentAccount {
-                                                content.badge = Int(value.0)
+                                                content.badge = ayuNotificationBadge(Int(value.0))
                                             }
                                             Logger.shared.log("NotificationService \(episode)", "Unread count: \(value.0), isCurrentAccount: \(isCurrentAccount)")
                                             Logger.shared.log("NotificationService \(episode)", "Updating content to \(content)")
@@ -2454,7 +2454,7 @@ private final class NotificationServiceHandler {
                                         |> deliverOn(strongSelf.queue)).start(next: { value in
                                             var content = NotificationContent(isLockedMessage: nil)
                                             if isCurrentAccount {
-                                                content.badge = Int(value.0)
+                                                content.badge = ayuNotificationBadge(Int(value.0))
                                             }
 
                                             Logger.shared.log("NotificationService \(episode)", "Unread count: \(value.0), isCurrentAccount: \(isCurrentAccount)")

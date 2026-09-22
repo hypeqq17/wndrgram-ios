@@ -42,7 +42,8 @@ public struct AyuSettingsData: Codable, Equatable {
     public var showMessageSeconds: Bool = false
     public var showPeerId: AyuPeerIdDisplay = .botApi
     public var messageBubbleRadius: Int32 = 16
-    public var avatarCorners: Int32 = 23
+    /// Avatar corner radius as a percentage of the avatar's size: 50 is a circle, 0 a square.
+    public var avatarRoundness: Int32 = 50
     public var hideAllChatsFolder: Bool = false
     public var disableStories: Bool = false
     public var disableAds: Bool = true
@@ -59,7 +60,7 @@ public struct AyuSettingsData: Codable, Equatable {
     public var unlimitedRecentStickers: Bool = false
     public var localPremium: Bool = false
 
-    // MARK: Ayu extras (not present in AyuGram Desktop)
+    // MARK: Ayu extras (not present in WndrGram Desktop)
     /// Do not let a chat be marked read when the app is opened from a notification.
     public var keepUnreadOnNotificationOpen: Bool = false
     /// Blur the app contents while it sits in the app switcher.
@@ -68,6 +69,10 @@ public struct AyuSettingsData: Codable, Equatable {
     public var streamerMode: Bool = false
     /// Require Face ID to reveal the locally archived deleted messages.
     public var lockMessageArchive: Bool = false
+
+    // MARK: Deleted message look
+    /// Opacity of kept deleted messages, in percent, when dimming is on.
+    public var deletedMessageOpacity: Int32 = 55
 
     public var ghostModeActive: Bool = false
 
@@ -111,7 +116,7 @@ public struct AyuSettingsData: Codable, Equatable {
         self.showMessageSeconds = b(.showMessageSeconds, d.showMessageSeconds)
         self.showPeerId = AyuPeerIdDisplay(rawValue: i(.showPeerId, d.showPeerId.rawValue)) ?? d.showPeerId
         self.messageBubbleRadius = i(.messageBubbleRadius, d.messageBubbleRadius)
-        self.avatarCorners = i(.avatarCorners, d.avatarCorners)
+        self.avatarRoundness = max(0, min(50, i(.avatarRoundness, d.avatarRoundness)))
         self.hideAllChatsFolder = b(.hideAllChatsFolder, d.hideAllChatsFolder)
         self.disableStories = b(.disableStories, d.disableStories)
         self.disableAds = b(.disableAds, d.disableAds)
@@ -131,6 +136,8 @@ public struct AyuSettingsData: Codable, Equatable {
         self.privacyScreenInAppSwitcher = b(.privacyScreenInAppSwitcher, d.privacyScreenInAppSwitcher)
         self.streamerMode = b(.streamerMode, d.streamerMode)
         self.lockMessageArchive = b(.lockMessageArchive, d.lockMessageArchive)
+
+        self.deletedMessageOpacity = max(10, min(100, i(.deletedMessageOpacity, d.deletedMessageOpacity)))
 
         self.ghostModeActive = b(.ghostModeActive, d.ghostModeActive)
     }

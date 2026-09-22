@@ -2,6 +2,7 @@ import UIKit
 import SwiftSignalKit
 import Display
 import TelegramCore
+import AyuSettings
 import UserNotifications
 import Intents
 import Postbox
@@ -216,6 +217,7 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
 
 @objc(AppDelegate) class AppDelegate: UIResponder, UIApplicationDelegate, PKPushRegistryDelegate, UNUserNotificationCenterDelegate, URLSessionDelegate, URLSessionTaskDelegate {
     @objc var window: UIWindow?
+    private var ayuPrivacyShield: AyuPrivacyShield?
     var nativeWindow: (UIWindow & WindowHost)?
     var mainWindow: Window1!
     private var dataImportSplash: LegacyDataImportSplash?
@@ -412,6 +414,7 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
             hostView.containerView.backgroundColor = UIColor.white
         }
         self.window = window
+        self.ayuPrivacyShield = AyuPrivacyShield(window: window, protectedView: hostView.containerView)
         self.nativeWindow = window
         
         hostView.containerView.layer.addSublayer(MetalEngine.shared.rootLayer)
@@ -948,23 +951,21 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
             self.window?.rootViewController?.dismiss(animated: true, completion: nil)
         }, getAvailableAlternateIcons: {
             if #available(iOS 10.3, *) {
-                var icons = [
+                // WndrGram icon set; every icon is free to pick.
+                let icons = [
                     PresentationAppIcon(name: "BlueIcon", imageName: "BlueIcon", isDefault: buildConfig.isAppStoreBuild),
-                    PresentationAppIcon(name: "New2", imageName: "New2"),
-                    PresentationAppIcon(name: "New1", imageName: "New1"),
                     PresentationAppIcon(name: "BlackIcon", imageName: "BlackIcon"),
                     PresentationAppIcon(name: "BlueClassicIcon", imageName: "BlueClassicIcon"),
                     PresentationAppIcon(name: "BlackClassicIcon", imageName: "BlackClassicIcon"),
                     PresentationAppIcon(name: "BlueFilledIcon", imageName: "BlueFilledIcon"),
-                    PresentationAppIcon(name: "BlackFilledIcon", imageName: "BlackFilledIcon")
+                    PresentationAppIcon(name: "BlackFilledIcon", imageName: "BlackFilledIcon"),
+                    PresentationAppIcon(name: "WhiteFilledIcon", imageName: "WhiteFilledIcon"),
+                    PresentationAppIcon(name: "New1", imageName: "New1"),
+                    PresentationAppIcon(name: "New2", imageName: "New2"),
+                    PresentationAppIcon(name: "Premium", imageName: "Premium"),
+                    PresentationAppIcon(name: "PremiumBlack", imageName: "PremiumBlack"),
+                    PresentationAppIcon(name: "PremiumTurbo", imageName: "PremiumTurbo")
                 ]
-                if buildConfig.isInternalBuild {
-                    icons.append(PresentationAppIcon(name: "WhiteFilledIcon", imageName: "WhiteFilledIcon"))
-                }
-                
-                icons.append(PresentationAppIcon(name: "Premium", imageName: "Premium", isPremium: true))
-                icons.append(PresentationAppIcon(name: "PremiumTurbo", imageName: "PremiumTurbo", isPremium: true))
-                icons.append(PresentationAppIcon(name: "PremiumBlack", imageName: "PremiumBlack", isPremium: true))
                 
                 return icons
             } else {
@@ -1878,13 +1879,17 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
 
     private func resetBadge() {
         var resetOnce = true
-        self.badgeDisposable.set((self.context.get()
+        self.badgeDisposable.set((combineLatest(self.context.get()
         |> mapToSignal { context -> Signal<Int32, NoError> in
             if let context = context {
                 return context.applicationBadge
             } else {
                 return .single(0)
             }
+        }, AyuSettings.shared.signal)
+        |> map { count, ayuSettings -> Int32 in
+            // WndrGram: "hide notification counters" also clears the icon badge.
+            return ayuSettings.hideNotificationCounters ? 0 : count
         }
         |> deliverOnMainQueue).start(next: { count in
             if resetOnce {
@@ -1898,6 +1903,7 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
+        self.ayuPrivacyShield?.applicationWillResignActive()
         self.isActiveValue = false
         self.isActivePromise.set(false)
         self.clearNotificationsManager?.commitNow()
@@ -2004,6 +2010,7 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
+        self.ayuPrivacyShield?.applicationDidBecomeActive()
         self.isInForegroundValue = true
         self.isInForegroundPromise.set(true)
         self.isActiveValue = true
@@ -2853,6 +2860,9 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                             messageId = messageIdFromNotification(peerId: peerId, notification: response.notification)
                         }
                         let storyId = storyIdFromNotification(peerId: peerId, notification: response.notification)
+                        if AyuSettings.current.keepUnreadOnNotificationOpen && storyId == nil {
+                            AyuNotificationOpenState.markPending(peerId: peerId)
+                        }
                         self.openChatWhenReady(accountId: accountId, peerId: peerId, threadId: threadId, messageId: messageId, storyId: storyId)
                     }
                 }

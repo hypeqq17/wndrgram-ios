@@ -151,7 +151,11 @@ func deleteMessagesInteractively(transaction: Transaction, stateManager: Account
             }
         }
     }
-    _internal_deleteMessages(transaction: transaction, mediaBox: postbox.mediaBox, ids: messageIds.map(\.messageId))
+    // The user asked for this deletion, so WndrGram must not keep the
+    // messages in the history (they still go to the local archive).
+    ayuPerformUserInitiatedDeletion {
+        _internal_deleteMessages(transaction: transaction, mediaBox: postbox.mediaBox, ids: messageIds.map(\.messageId))
+    }
     
     stateManager?.notifyDeletedMessages(messageIds: messageIds.map(\.messageId))
     

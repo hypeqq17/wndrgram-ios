@@ -13,6 +13,7 @@ swift_library(
         "//submodules/AsyncDisplayKit:AsyncDisplayKit",
         "//submodules/Display:Display",
         "//submodules/TelegramCore:TelegramCore",
+        "//submodules/AyuGram/AyuSettings:AyuSettings",
         "//submodules/Postbox",
         "//submodules/TelegramPresentationData:TelegramPresentationData",
         "//submodules/AnimationUI:AnimationUI",

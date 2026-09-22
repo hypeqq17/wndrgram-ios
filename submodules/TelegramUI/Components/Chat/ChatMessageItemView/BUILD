@@ -13,6 +13,7 @@ swift_library(
         "//submodules/AsyncDisplayKit",
         "//submodules/Display",
         "//submodules/TelegramCore",
+        "//submodules/AyuGram/AyuSettings:AyuSettings",
         "//submodules/AccountContext",
         "//submodules/LocalizedPeerData",
         "//submodules/ContextUI",

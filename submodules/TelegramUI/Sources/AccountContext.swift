@@ -3,6 +3,7 @@ import SwiftSignalKit
 import UIKit
 import Postbox
 import TelegramCore
+import AyuSettings
 import Display
 import DeviceAccess
 import TelegramPresentationData
@@ -439,7 +440,9 @@ public final class AccountContextImpl: AccountContext {
         
         self.userLimitsConfigurationDisposable = (self.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: account.peerId))
         |> mapToSignal { peer -> Signal<(Bool, EngineConfiguration.UserLimits), NoError> in
-            let isPremium = peer?.isPremium ?? false
+            // WndrGram "local premium": unlock premium-gated client UI and
+            // limits on this device only (the server still enforces its own).
+            let isPremium = (peer?.isPremium ?? false) || AyuSettings.current.localPremium
             return self.engine.data.subscribe(TelegramEngine.EngineData.Item.Configuration.UserLimits(isPremium: isPremium))
             |> map { userLimits in
                 return (isPremium, userLimits)

@@ -58,6 +58,7 @@ import SearchBarNode
 import ChatListFilterTabContainerNode
 import HeaderPanelContainerComponent
 import HorizontalTabsComponent
+import AyuSettings
 import GlobalControlPanelsContext
 import AlertComponent
 import AlertHeaderComponent
@@ -93,6 +94,8 @@ private final class ContextControllerContentSourceImpl: ContextControllerContent
 }
 
 public class ChatListControllerImpl: TelegramBaseController, ChatListController {
+    /// Set while re-opening a story after the WndrGram ghost-mode prompt.
+    private var ayuStoryPromptBypass = false
     private var validLayout: ContainerViewLayout?
     
     public let context: AccountContext
@@ -436,9 +439,9 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
             }
         }
         
-        self.badgeDisposable = (combineLatest(renderedTotalUnreadCount(accountManager: context.sharedContext.accountManager, engine: context.engine), self.presentationDataValue.get()) |> deliverOnMainQueue).startStrict(next: { [weak self] count, presentationData in
+        self.badgeDisposable = (combineLatest(renderedTotalUnreadCount(accountManager: context.sharedContext.accountManager, engine: context.engine), self.presentationDataValue.get(), AyuSettings.shared.signal) |> deliverOnMainQueue).startStrict(next: { [weak self] count, presentationData, ayuSettings in
             if let strongSelf = self {
-                if count.0 == 0 {
+                if count.0 == 0 || ayuSettings.hideNotificationCounters {
                     strongSelf.tabBarItem.badgeValue = ""
                 } else {
                     strongSelf.tabBarItem.badgeValue = compactNumericCountString(Int(count.0), decimalSeparator: presentationData.dateTimeFormat.decimalSeparator)
@@ -4341,6 +4344,41 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
     }
     
     public func openStories(peerId: EnginePeer.Id, completion: @escaping (StoryContainerScreen) -> Void = { _ in }) {
+        let ayuSettings = AyuSettings.current
+        if peerId != self.context.account.peerId && !self.ayuStoryPromptBypass && ayuSettings.suggestGhostModeBeforeViewingStory && ayuSettings.sendReadStories {
+            // WndrGram: offer ghost mode before a story view is reported.
+            let reopen: (Bool) -> Void = { [weak self] enableGhost in
+                if enableGhost {
+                    AyuSettings.shared.setGhostMode(true)
+                }
+                // Settings are written asynchronously; give them a moment so
+                // the first view is already covered by the new mode.
+                Queue.mainQueue().after(0.15, {
+                    guard let self else {
+                        return
+                    }
+                    self.ayuStoryPromptBypass = true
+                    self.openStories(peerId: peerId, completion: completion)
+                    self.ayuStoryPromptBypass = false
+                })
+            }
+            self.present(textAlertController(context: self.context, title: "Режим призрака", text: "Включить режим призрака, чтобы автор не узнал о просмотре истории?", actions: [
+                TextAlertAction(type: .defaultAction, title: "Включить", action: {
+                    reopen(true)
+                }),
+                TextAlertAction(type: .genericAction, title: "Смотреть так", action: {
+                    reopen(false)
+                }),
+                TextAlertAction(type: .genericAction, title: "Не спрашивать", action: {
+                    AyuSettings.shared.update { settings in
+                        settings.suggestGhostModeBeforeViewingStory = false
+                    }
+                    reopen(false)
+                })
+            ], actionLayout: .vertical), in: .window(.root))
+            return
+        }
+        
         if let navigationBarView = self.chatListDisplayNode.navigationBarView.view as? ChatListNavigationBar.View {
             if navigationBarView.storiesUnlocked {
                 self.shouldFixStorySubscriptionOrder = true

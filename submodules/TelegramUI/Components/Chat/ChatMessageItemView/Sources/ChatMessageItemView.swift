@@ -3,6 +3,7 @@ import UIKit
 import AsyncDisplayKit
 import Display
 import TelegramCore
+import AyuSettings
 import AccountContext
 import LocalizedPeerData
 import ContextUI
@@ -652,6 +653,7 @@ public enum InternalBubbleTapAction {
 }
 
 open class ChatMessageItemView: ListViewItemNode, ChatMessageItemNodeProtocol {
+    private var ayuAppliedAlpha: CGFloat = 1.0
     public let layoutConstants = (ChatMessageItemLayoutConstants.compact, ChatMessageItemLayoutConstants.regular)
     
     open var item: ChatMessageItem?
@@ -689,6 +691,27 @@ open class ChatMessageItemView: ListViewItemNode, ChatMessageItemNodeProtocol {
     
     open func setupItem(_ item: ChatMessageItem, synchronousLoad: Bool) {
         self.item = item
+        self.updateAyuDeletedAppearance(item: item)
+    }
+    
+    /// Dims messages that the server deleted but WndrGram kept, when enabled.
+    /// Applied to the item's own layer, so every bubble kind picks it up.
+    private func updateAyuDeletedAppearance(item: ChatMessageItem) {
+        let settings = AyuSettings.current
+        var isDeleted = false
+        if settings.semiTransparentDeletedMessages {
+            switch item.content {
+            case let .message(message, _, _, _, _):
+                isDeleted = message.isAyuDeleted
+            case let .group(messages):
+                isDeleted = messages.contains(where: { $0.0.isAyuDeleted })
+            }
+        }
+        let targetAlpha: CGFloat = isDeleted ? CGFloat(settings.deletedMessageOpacity) / 100.0 : 1.0
+        if self.ayuAppliedAlpha != targetAlpha {
+            self.ayuAppliedAlpha = targetAlpha
+            self.alpha = targetAlpha
+        }
     }
     
     open func updateAccessibilityData(_ accessibilityData: ChatMessageAccessibilityData) {

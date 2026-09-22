@@ -62,7 +62,7 @@ public final class AyuMessageArchive {
             return
         }
         // Outgoing messages the user deletes themselves are still archived:
-        // AyuGram keeps both sides so an edited-then-deleted thread reads back
+        // WndrGram keeps both sides so an edited-then-deleted thread reads back
         // in full.
         let media = settings.saveDeletedMedia ? message.media : []
         let archived = AyuArchivedMessage(
@@ -143,6 +143,24 @@ public final class AyuMessageArchive {
         self.loadedPeers.insert(peerId)
         self.cacheLock.unlock()
         return loaded
+    }
+
+    /// Peers that have anything archived, for the archive browser.
+    public func archivedPeerIds() -> [PeerId] {
+        self.cacheLock.lock()
+        let baseURL = self.baseURL
+        var result = Set(self.cache.filter { !$0.value.isEmpty }.map(\.key))
+        self.cacheLock.unlock()
+        guard let baseURL = baseURL else {
+            return Array(result)
+        }
+        let contents = (try? FileManager.default.contentsOfDirectory(at: baseURL, includingPropertiesForKeys: nil)) ?? []
+        for url in contents where url.pathExtension == "bin" {
+            if let value = Int64(url.deletingPathExtension().lastPathComponent) {
+                result.insert(PeerId(value))
+            }
+        }
+        return Array(result)
     }
 
     /// Ids of messages that were deleted in this peer, for fast per-row lookup
