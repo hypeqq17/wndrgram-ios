@@ -33,12 +33,8 @@ jobs:
       - name: Free disk space
         run: |
           df -h /
-          # Other Xcode versions and simulator runtimes are the largest
-          # removable items on the runner image.
-          CURRENT="$(xcode-select -p | sed 's#/Contents/Developer##')"
-          for x in /Applications/Xcode*.app; do
-            if [ "$x" != "$CURRENT" ] && [ ! -L "$x" ]; then sudo rm -rf "$x"; fi
-          done
+          # Simulator runtimes and Android tooling are large and unused here.
+          # Xcode itself is left alone.
           xcrun simctl delete all || true
           sudo rm -rf ~/Library/Developer/CoreSimulator/Caches || true
           sudo rm -rf /usr/local/share/android-sdk ~/Library/Android /usr/local/lib/node_modules || true
@@ -58,6 +54,6 @@ jobs:
           path: ${{ runner.temp }}/WndrGram-iOS/out/*.ipa
           if-no-files-found: error
 
-      - name: Upload build log on failure
+      - name: Disk usage on failure
         if: failure()
         run: df -h /
