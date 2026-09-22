@@ -27,7 +27,7 @@ echo "==> Checking tools"
 command -v git >/dev/null || { echo "git not found: install Xcode Command Line Tools (xcode-select --install)"; exit 1; }
 command -v python3 >/dev/null || { echo "python3 not found"; exit 1; }
 command -v xcodebuild >/dev/null || { echo "Xcode not found: install Xcode from the App Store"; exit 1; }
-xcodebuild -version | head -1
+xcodebuild -version | sed -n 1p
 
 if [ ! -d "$WORK_DIR/.git" ]; then
     echo "==> Cloning upstream Telegram-iOS into $WORK_DIR (large, takes a while)"
@@ -74,9 +74,9 @@ fi
 
 python3 -u build-system/Make/Make.py --overrideXcodeVersion     --cacheDir "$CACHE_DIR"     build     --continueOnError     --configurationPath build-system/appstore-configuration.json     --codesigningInformationPath build-system/fake-codesigning     --buildNumber=1     --configuration="$CONFIGURATION"
 
-IPA="$(find -L bazel-out -path '*/bin/Telegram/Telegram.ipa' -newer "$SRC_DIR/wndrgram-mac-build.sh" 2>/dev/null | head -1)"
+IPA="$(find -L bazel-out -path '*/bin/Telegram/Telegram.ipa' -newer "$SRC_DIR/wndrgram-mac-build.sh" 2>/dev/null | sed -n 1p)"
 if [ -z "$IPA" ]; then
-    IPA="$(find -L bazel-out -path '*/bin/Telegram/Telegram.ipa' | head -1)"
+    IPA="$(find -L bazel-out -path '*/bin/Telegram/Telegram.ipa' | sed -n 1p)"
 fi
 mkdir -p "$WORK_DIR/out"
 cp "$IPA" "$WORK_DIR/out/WndrGram-$MODE.ipa"
