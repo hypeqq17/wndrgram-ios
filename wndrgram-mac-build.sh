@@ -74,9 +74,13 @@ fi
 
 python3 -u build-system/Make/Make.py --overrideXcodeVersion     --cacheDir "$CACHE_DIR"     build     --continueOnError     --configurationPath build-system/appstore-configuration.json     --codesigningInformationPath build-system/fake-codesigning     --buildNumber=1     --configuration="$CONFIGURATION"
 
-IPA="$(find -L bazel-out -path '*/bin/Telegram/Telegram.ipa' -newer "$SRC_DIR/wndrgram-mac-build.sh" 2>/dev/null | sed -n 1p)"
+IPA="$(find -L bazel-out -path '*/bin/Telegram/Telegram.ipa' -newer "$SRC_DIR/wndrgram-mac-build.sh" 2>/dev/null | sed -n 1p || true)"
 if [ -z "$IPA" ]; then
-    IPA="$(find -L bazel-out -path '*/bin/Telegram/Telegram.ipa' | sed -n 1p)"
+    IPA="$(find -L bazel-out -path "*/bin/Telegram/Telegram.ipa" 2>/dev/null | sed -n 1p || true)"
+fi
+if [ -z "$IPA" ]; then
+    echo "Build finished but no Telegram.ipa was found under bazel-out"
+    exit 1
 fi
 mkdir -p "$WORK_DIR/out"
 cp "$IPA" "$WORK_DIR/out/WndrGram-$MODE.ipa"
