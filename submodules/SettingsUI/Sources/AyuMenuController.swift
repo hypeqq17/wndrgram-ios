@@ -233,13 +233,13 @@ public final class AyuMenuController: ViewController {
         let toggle = UISwitch()
         toggle.onTintColor = palette.accent
         toggle.setContentCompressionResistancePriority(.required, for: .horizontal)
-        toggle.addAction(UIAction { [weak toggle] _ in
+        toggle.ayuOn(.valueChanged) { [weak toggle] in
             guard let toggle else {
                 return
             }
             ayuMenuHaptic.impact()
             AyuSettings.shared.setGhostMode(toggle.isOn)
-        }, for: .valueChanged)
+        }
 
         for view in [iconBackground, icon, title, subtitle, toggle] as [UIView] {
             view.translatesAutoresizingMaskIntoConstraints = false
@@ -392,7 +392,7 @@ public final class AyuMenuController: ViewController {
             let toggle = UISwitch()
             toggle.onTintColor = palette.accent
             toggle.setContentCompressionResistancePriority(.required, for: .horizontal)
-            toggle.addAction(UIAction { [weak toggle] _ in
+            toggle.ayuOn(.valueChanged) { [weak toggle] in
                 guard let toggle else {
                     return
                 }
@@ -401,7 +401,7 @@ public final class AyuMenuController: ViewController {
                 AyuSettings.shared.update { settings in
                     set(&settings, value)
                 }
-            }, for: .valueChanged)
+            }
             let stack = UIStackView(arrangedSubviews: [texts, toggle])
             stack.alignment = .center
             stack.spacing = 12.0
@@ -428,15 +428,15 @@ public final class AyuMenuController: ViewController {
             slider.maximumTrackTintColor = palette.separator
             slider.isContinuous = true
             var isDragging = false
-            slider.addAction(UIAction { [weak slider, weak valueLabel] _ in
+            slider.ayuOn(.valueChanged) { [weak slider, weak valueLabel] in
                 guard let slider else {
                     return
                 }
                 isDragging = true
                 let snapped = (slider.value / step).rounded() * step
                 valueLabel?.text = format(snapped)
-            }, for: .valueChanged)
-            slider.addAction(UIAction { [weak slider] _ in
+            }
+            slider.ayuOn([.touchUpInside, .touchUpOutside, .touchCancel]) { [weak slider] in
                 guard let slider else {
                     return
                 }
@@ -447,7 +447,7 @@ public final class AyuMenuController: ViewController {
                 AyuSettings.shared.update { settings in
                     set(&settings, snapped)
                 }
-            }, for: [.touchUpInside, .touchUpOutside, .touchCancel])
+            }
 
             let stack = UIStackView(arrangedSubviews: [top, slider])
             stack.axis = .vertical
@@ -464,7 +464,7 @@ public final class AyuMenuController: ViewController {
 
         case let .segmented(title, options, get, set):
             let control = UISegmentedControl(items: options)
-            control.addAction(UIAction { [weak control] _ in
+            control.ayuOn(.valueChanged) { [weak control] in
                 guard let control else {
                     return
                 }
@@ -473,7 +473,7 @@ public final class AyuMenuController: ViewController {
                 AyuSettings.shared.update { settings in
                     set(&settings, index)
                 }
-            }, for: .valueChanged)
+            }
             let stack = UIStackView(arrangedSubviews: [self.makeTitleLabel(title, palette: palette), control])
             stack.axis = .vertical
             stack.spacing = 10.0
@@ -495,15 +495,15 @@ public final class AyuMenuController: ViewController {
             field.attributedPlaceholder = NSAttributedString(string: placeholder, attributes: [.foregroundColor: palette.secondaryText.withAlphaComponent(0.5)])
             field.setContentCompressionResistancePriority(.required, for: .horizontal)
             field.widthAnchor.constraint(greaterThanOrEqualToConstant: 80.0).isActive = true
-            field.addAction(UIAction { [weak field] _ in
+            field.ayuOn(.editingChanged) { [weak field] in
                 let value = field?.text ?? ""
                 AyuSettings.shared.update { settings in
                     set(&settings, value)
                 }
-            }, for: .editingChanged)
-            field.addAction(UIAction { [weak field] _ in
+            }
+            field.ayuOn(.editingDidEndOnExit) { [weak field] in
                 field?.resignFirstResponder()
-            }, for: .editingDidEndOnExit)
+            }
             let stack = UIStackView(arrangedSubviews: [self.makeTitleLabel(title, palette: palette), field])
             stack.alignment = .center
             stack.spacing = 12.0
@@ -533,9 +533,9 @@ public final class AyuMenuController: ViewController {
             button.titleLabel?.font = UIFont.systemFont(ofSize: 17.0)
             button.contentHorizontalAlignment = .leading
             button.setTitleColor(destructive ? palette.destructive : palette.accent, for: .normal)
-            button.addAction(UIAction { _ in
+            button.ayuOn(.touchUpInside) {
                 action()
-            }, for: .touchUpInside)
+            }
             return self.padded(button)
         }
     }
@@ -714,5 +714,31 @@ public final class AyuMenuController: ViewController {
         groups.append(AyuMenuGroup(title: "Конфигурация", footer: "Настройки — обычный JSON: им можно поделиться или сохранить в заметки.", rows: configRows))
 
         return groups
+    }
+}
+
+/// Closure-based control events that work on iOS 13 (`UIControl.addAction`
+/// is iOS 14+). Handlers live as long as the control.
+private final class AyuControlHandler: NSObject {
+    private let action: () -> Void
+
+    init(_ action: @escaping () -> Void) {
+        self.action = action
+    }
+
+    @objc func fire() {
+        self.action()
+    }
+}
+
+private var ayuControlHandlersKey: UInt8 = 0
+
+private extension UIControl {
+    func ayuOn(_ events: UIControl.Event, _ action: @escaping () -> Void) {
+        let handler = AyuControlHandler(action)
+        self.addTarget(handler, action: #selector(AyuControlHandler.fire), for: events)
+        var handlers = (objc_getAssociatedObject(self, &ayuControlHandlersKey) as? [AyuControlHandler]) ?? []
+        handlers.append(handler)
+        objc_setAssociatedObject(self, &ayuControlHandlersKey, handlers, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
 }
