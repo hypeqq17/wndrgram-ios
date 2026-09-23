@@ -150,6 +150,21 @@ private class ApplicationStatusBarHost: StatusBarHost {
     }
 }
 
+/// WndrGram: CloudKit traps the whole process when the app is signed without
+/// the iCloud entitlement, which is always the case for builds re-signed with
+/// a free Apple ID (Sideloadly, AltStore). Only enable it when the embedded
+/// provisioning profile actually grants iCloud; App Store builds carry no
+/// profile and are signed by Apple with the right entitlements.
+private func ayuSigningAllowsICloud() -> Bool {
+    guard let url = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision") else {
+        return true
+    }
+    guard let data = try? Data(contentsOf: url), let marker = "com.apple.developer.icloud-services".data(using: .utf8) else {
+        return false
+    }
+    return data.range(of: marker) != nil
+}
+
 private func legacyDocumentsPath() -> String {
     return NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] + "/legacy"
 }
@@ -641,7 +656,7 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
             encryptionProvider: OpenSSLEncryptionProvider(),
             deviceModelName: nil,
             useBetaFeatures: !buildConfig.isAppStoreBuild,
-            isICloudEnabled: buildConfig.isICloudEnabled
+            isICloudEnabled: buildConfig.isICloudEnabled && ayuSigningAllowsICloud()
         )
         
         // WndrGram: builds re-signed with a free Apple ID (Sideloadly, AltStore)
