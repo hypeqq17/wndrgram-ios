@@ -61,6 +61,25 @@ rsync -a \
 
 cd "$WORK_DIR"
 
+# Own api_id/api_hash from my.telegram.org. Telegram's official iOS keys
+# require App Store-only app verification, so a re-signed build can't log in.
+CONFIGURATION_PATH="build-system/appstore-configuration.json"
+if [ -n "${WNDRGRAM_API_ID:-}" ] && [ -n "${WNDRGRAM_API_HASH:-}" ]; then
+    CONFIGURATION_PATH="$WORK_DIR/wndrgram-configuration.json"
+    python3 - "$CONFIGURATION_PATH" <<'PY'
+import json, os, sys
+with open("build-system/appstore-configuration.json") as f:
+    config = json.load(f)
+config["api_id"] = os.environ["WNDRGRAM_API_ID"]
+config["api_hash"] = os.environ["WNDRGRAM_API_HASH"]
+with open(sys.argv[1], "w") as f:
+    json.dump(config, f, indent=4)
+PY
+    echo "==> Using WndrGram api_id"
+else
+    echo "==> WARNING: WNDRGRAM_API_ID/WNDRGRAM_API_HASH not set, using the stock configuration"
+fi
+
 echo "==> Restoring executable bits"
 # This tree came from a zip made on Windows, so the copy above strips the
 # executable bit from every build script; take the modes from upstream git.
@@ -79,7 +98,7 @@ else
     echo "==> Building an IPA for a real iPhone (first build: 30-90 minutes)"
 fi
 
-python3 -u build-system/Make/Make.py --overrideXcodeVersion     --cacheDir "$CACHE_DIR"     build     --continueOnError     --configurationPath build-system/appstore-configuration.json     --codesigningInformationPath build-system/fake-codesigning     --buildNumber=1     --configuration="$CONFIGURATION"
+python3 -u build-system/Make/Make.py --overrideXcodeVersion     --cacheDir "$CACHE_DIR"     build     --continueOnError     --configurationPath "$CONFIGURATION_PATH"     --codesigningInformationPath build-system/fake-codesigning     --buildNumber=1     --configuration="$CONFIGURATION"
 
 IPA="$(find -L bazel-out -path '*/bin/Telegram/Telegram.ipa' -newer "$SRC_DIR/wndrgram-mac-build.sh" 2>/dev/null | sed -n 1p || true)"
 if [ -z "$IPA" ]; then

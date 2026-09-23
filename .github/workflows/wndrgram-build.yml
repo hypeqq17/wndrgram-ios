@@ -51,6 +51,8 @@ jobs:
       - name: Build IPA
         env:
           WNDRGRAM_WORK_DIR: ${{ runner.temp }}/WndrGram-iOS
+          WNDRGRAM_API_ID: ${{ secrets.WNDRGRAM_API_ID }}
+          WNDRGRAM_API_HASH: ${{ secrets.WNDRGRAM_API_HASH }}
         run: |
           chmod +x wndrgram-mac-build.sh
           ./wndrgram-mac-build.sh --device
