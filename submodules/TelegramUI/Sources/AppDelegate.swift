@@ -150,19 +150,27 @@ private class ApplicationStatusBarHost: StatusBarHost {
     }
 }
 
-/// WndrGram: CloudKit traps the whole process when the app is signed without
-/// the iCloud entitlement, which is always the case for builds re-signed with
-/// a free Apple ID (Sideloadly, AltStore). Only enable it when the embedded
-/// provisioning profile actually grants iCloud; App Store builds carry no
-/// profile and are signed by Apple with the right entitlements.
-private func ayuSigningAllowsICloud() -> Bool {
+/// WndrGram: some system frameworks kill the process outright when the app
+/// is signed without their entitlement (CloudKit traps, Siri's INPreferences
+/// throws). Builds re-signed with a free Apple ID (Sideloadly, AltStore) never
+/// get iCloud or Siri, so check the embedded provisioning profile before using
+/// them. App Store builds carry no profile and are signed with everything.
+private func ayuSigningAllows(_ entitlement: String) -> Bool {
     guard let url = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision") else {
         return true
     }
-    guard let data = try? Data(contentsOf: url), let marker = "com.apple.developer.icloud-services".data(using: .utf8) else {
+    guard let data = try? Data(contentsOf: url), let marker = entitlement.data(using: .utf8) else {
         return false
     }
     return data.range(of: marker) != nil
+}
+
+private func ayuSigningAllowsICloud() -> Bool {
+    return ayuSigningAllows("com.apple.developer.icloud-services")
+}
+
+private func ayuSigningAllowsSiri() -> Bool {
+    return ayuSigningAllows("com.apple.developer.siri")
 }
 
 private func legacyDocumentsPath() -> String {
@@ -937,7 +945,7 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                 }
             })
         }, requestSiriAuthorization: { completion in
-            if #available(iOS 10, *) {
+            if #available(iOS 10, *), ayuSigningAllowsSiri() {
                 INPreferences.requestSiriAuthorization { status in
                     if case .authorized = status {
                         completion(true)
@@ -949,7 +957,7 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                 completion(false)
             }
         }, siriAuthorization: {
-            if buildConfig.isSiriEnabled {
+            if buildConfig.isSiriEnabled && ayuSigningAllowsSiri() {
                 if #available(iOS 10, *) {
                     switch INPreferences.siriAuthorizationStatus() {
                     case .authorized:
