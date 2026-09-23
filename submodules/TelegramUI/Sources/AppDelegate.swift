@@ -644,7 +644,16 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
             isICloudEnabled: buildConfig.isICloudEnabled
         )
         
-        guard let appGroupUrl = maybeAppGroupUrl else {
+        // WndrGram: builds re-signed with a free Apple ID (Sideloadly, AltStore)
+        // do not get the App Group, so fall back to the app's own container
+        // instead of stopping at a black screen. Extensions just won't share data.
+        let appGroupUrl: URL
+        if let maybeAppGroupUrl {
+            appGroupUrl = maybeAppGroupUrl
+        } else if let fallbackUrl = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
+            try? FileManager.default.createDirectory(at: fallbackUrl, withIntermediateDirectories: true)
+            appGroupUrl = fallbackUrl
+        } else {
             self.mainWindow?.presentNative(UIAlertController(title: nil, message: "Error 2", preferredStyle: .alert))
             return true
         }
