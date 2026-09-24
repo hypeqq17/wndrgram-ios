@@ -1661,6 +1661,7 @@ open class NavigationController: UINavigationController, ContainableController, 
     }
     
     public func setViewControllers(_ viewControllers: [UIViewController], animated: Bool, completion: @escaping () -> Void) {
+        wndrTrace("nav: setViewControllers \(self.viewControllers.count) -> \(viewControllers.count) animated=\(animated) top=\(viewControllers.last.flatMap { String(describing: type(of: $0)) } ?? "nil")")
         let requestedViewControllers = viewControllers
         var viewControllers: [UIViewController] = []
         for controller in requestedViewControllers {

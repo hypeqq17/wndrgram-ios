@@ -1394,6 +1394,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
         }
         
         self.chatListDisplayNode.mainContainerNode.peerSelected = { [weak self] peer, threadId, animated, activateInput, promoInfo in
+            wndrTrace("chatlist: peerSelected \(peer.id) thread=\(String(describing: threadId))")
             Task { @MainActor [weak self] in
                 guard let self else {
                     return
@@ -1417,8 +1418,10 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                         return
                     }
                     guard let navigationController = self.navigationController as? NavigationController else {
+                        wndrTrace("chatlist: no navigation controller")
                         return
                     }
+                    wndrTrace("chatlist: resolved, navigating")
                     
                     var peer = peer
                     var threadId = threadId

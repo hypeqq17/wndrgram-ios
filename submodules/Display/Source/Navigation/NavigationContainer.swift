@@ -45,7 +45,18 @@ public final class NavigationContainer: ASDisplayNode, ASGestureRecognizerDelega
                 self.isReady = true
             } else {
                 localIsReady = false
+                // WndrGram: never let a controller that fails to report
+                // readiness block navigation forever (a tap on a chat did
+                // nothing and the stack locked up). Show it after 1s anyway.
+                Queue.mainQueue().after(1.0, { [weak self] in
+                    guard let self, !self.isReady else {
+                        return
+                    }
+                    wndrTrace("nav: ready watchdog fired for \(type(of: value.value)) (\(transitionType))")
+                    update(self)
+                })
             }
+            wndrTrace("nav: pending \(type(of: value.value)) \(transitionType) readyNow=\(self.isReady)")
         }
         
         deinit {
@@ -511,8 +522,10 @@ public final class NavigationContainer: ASDisplayNode, ASGestureRecognizerDelega
                 }
             }))
             self.state.transition = topTransition
+            wndrTrace("nav: transition start \(transitionType) to \(type(of: topController))")
             
             topTransition.coordinator.animateCompletion(0.0, completion: { [weak self, weak topTransition] in
+                wndrTrace("nav: transition completion")
                 guard let strongSelf = self, let topTransition = topTransition, strongSelf.state.transition === topTransition else {
                     return
                 }
@@ -637,6 +650,7 @@ public final class NavigationContainer: ASDisplayNode, ASGestureRecognizerDelega
     }
     
     private func pendingChildIsReady(_ child: PendingChild) {
+        wndrTrace("nav: pendingChildIsReady \(type(of: child.value.value)) current=\(self.state.pending === child)")
         if let pending = self.state.pending, pending === child {
             pending.isReady = true
             self.performUpdate(transition: .immediate)

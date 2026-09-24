@@ -646,9 +646,9 @@ extension ChatControllerImpl {
         #endif
         
         self.ready.set(combineLatest(queue: .mainQueue(), [
-            self.contentDataReady.get(),
-            self.wallpaperReady.get(),
-            self.presentationReady.get()
+            self.contentDataReady.get() |> beforeNext { wndrTrace("chat: contentDataReady \($0)") },
+            self.wallpaperReady.get() |> beforeNext { wndrTrace("chat: wallpaperReady \($0)") },
+            self.presentationReady.get() |> beforeNext { wndrTrace("chat: presentationReady \($0)") }
         ])
         |> map { values in
             return !values.contains(where: { !$0 })
@@ -669,6 +669,7 @@ extension ChatControllerImpl {
     
     func loadDisplayNodeImpl() {
         self.navigationBar?.backPressed = { [weak self] in
+            wndrTrace("chat: backPressed")
             guard let self else {
                 return
             }
