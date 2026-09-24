@@ -1369,6 +1369,69 @@ func contextMenuForChatPresentationInterfaceState(chatPresentationInterfaceState
                 })
             })))
         }
+        if AyuSettings.current.showRepeatInContextMenu, message.id.namespace == Namespaces.Message.Cloud, !message.containsSecretMedia {
+            actions.append(.action(ContextMenuActionItem(text: "Повторить", icon: { theme in
+                return generateTintedImage(image: UIImage(systemName: "arrow.2.squarepath"), color: theme.actionSheet.primaryTextColor)
+            }, action: { _, f in
+                // Sends the message again as your own (a forward without
+                // the "Forwarded from" header), like AyuGram's "Repeat".
+                let _ = enqueueMessages(account: context.account, peerId: message.id.peerId, messages: [
+                    .forward(source: message.id, threadId: message.threadId, grouping: .auto, attributes: [ForwardOptionsMessageAttribute(hideNames: true, hideCaptions: false)], correlationId: nil)
+                ]).start()
+                f(.default)
+            })))
+        }
+        if AyuSettings.current.showDetailsInContextMenu {
+            actions.append(.action(ContextMenuActionItem(text: "Детали сообщения", icon: { theme in
+                return generateTintedImage(image: UIImage(systemName: "info.circle"), color: theme.actionSheet.primaryTextColor)
+            }, action: { c, _ in
+                c?.dismiss(completion: {
+                    let presentationData = context.sharedContext.currentPresentationData.with { $0 }
+                    let formatter = DateFormatter()
+                    formatter.dateStyle = .medium
+                    formatter.timeStyle = .medium
+                    var lines: [String] = []
+                    lines.append("ID сообщения: \(message.id.id)")
+                    lines.append("ID чата: \(message.id.peerId.id._internalGetInt64Value())")
+                    if let author = message.author {
+                        lines.append("ID автора: \(author.id.id._internalGetInt64Value())")
+                    }
+                    lines.append("Отправлено: \(formatter.string(from: Date(timeIntervalSince1970: TimeInterval(message.timestamp))))")
+                    for attribute in message.attributes {
+                        if let attribute = attribute as? EditedMessageAttribute {
+                            lines.append("Изменено: \(formatter.string(from: Date(timeIntervalSince1970: TimeInterval(attribute.date))))")
+                        }
+                        if let attribute = attribute as? AyuDeletedMessageAttribute {
+                            lines.append("Удалено: \(formatter.string(from: Date(timeIntervalSince1970: TimeInterval(attribute.timestamp))))")
+                        }
+                        if let attribute = attribute as? ViewCountMessageAttribute {
+                            lines.append("Просмотры: \(attribute.count)")
+                        }
+                    }
+                    if let forwardInfo = message.forwardInfo {
+                        lines.append("Переслано, оригинал от: \(formatter.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date))))")
+                    }
+                    for media in message.media {
+                        if let file = media as? TelegramMediaFile, let size = file.size {
+                            lines.append("Файл: \(file.fileName ?? file.mimeType), \(ByteCountFormatter.string(fromByteCount: size, countStyle: .file))")
+                        }
+                    }
+                    let text = lines.joined(separator: "\n")
+                    controllerInteraction.presentController(textAlertController(
+                        context: context,
+                        title: "Детали сообщения",
+                        text: text,
+                        actions: [
+                            TextAlertAction(type: .genericAction, title: "Копировать", action: {
+                                UIPasteboard.general.string = text
+                            }),
+                            TextAlertAction(type: .defaultAction, title: presentationData.strings.Common_OK, action: {})
+                        ],
+                        actionLayout: .vertical
+                    ), nil)
+                })
+            })))
+        }
         if AyuSettings.current.showPeerId != .hidden {
             actions.append(.action(ContextMenuActionItem(text: "Скопировать ID сообщения", icon: { theme in
                 return generateTintedImage(image: UIImage(systemName: "number"), color: theme.actionSheet.primaryTextColor)

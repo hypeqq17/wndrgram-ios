@@ -1,4 +1,5 @@
 import Foundation
+import AyuSettings
 import UIKit
 import AsyncDisplayKit
 import Postbox
@@ -943,7 +944,7 @@ public final class ChatMessageInteractiveMediaNode: ASDisplayNode, GalleryItemTr
                 }
             }
             
-            let hasSpoiler = message.attributes.contains(where: { $0 is MediaSpoilerMessageAttribute })
+            let hasSpoiler = message.attributes.contains(where: { $0 is MediaSpoilerMessageAttribute }) && !AyuSettings.current.revealSpoilers
             var isExtendedMediaPreview = false
             var isInlinePlayableVideo = false
             var isSticker = false

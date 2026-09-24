@@ -696,6 +696,9 @@ public final class AyuMenuController: ViewController {
                 .segmented(title: "ID в профиле", options: ["Скрыт", "Bot API", "Telegram"], get: { Int($0.showPeerId.rawValue) }, set: { settings, index in
                     settings.showPeerId = AyuPeerIdDisplay(rawValue: Int32(index)) ?? .botApi
                 }),
+                .toggle(title: "Без хвостиков у пузырей", subtitle: "Нужен перезапуск", get: { $0.removeMessageTail }, set: { $0.removeMessageTail = $1 }),
+                .toggle(title: "Раскрывать спойлеры", subtitle: "Текст и медиа под спойлером видны сразу", get: { $0.revealSpoilers }, set: { $0.revealSpoilers = $1 }),
+                .toggle(title: "Фильтр «залго»-текста", subtitle: "Убирает нагромождения символов в сообщениях", get: { $0.filterZalgo }, set: { $0.filterZalgo = $1 }),
                 .toggle(title: "Скрыть папку «Все чаты»", subtitle: nil, get: { $0.hideAllChatsFolder }, set: { $0.hideAllChatsFolder = $1 }),
                 .toggle(title: "Скрыть истории", subtitle: nil, get: { $0.disableStories }, set: { $0.disableStories = $1 }),
                 .toggle(title: "Скрыть рекламу", subtitle: "Спонсорские сообщения в каналах", get: { $0.disableAds }, set: { $0.disableAds = $1 }),
@@ -703,6 +706,8 @@ public final class AyuMenuController: ViewController {
                 .toggle(title: "Скрыть счётчики", subtitle: "Значок на иконке и на вкладке «Чаты»", get: { $0.hideNotificationCounters }, set: { $0.hideNotificationCounters = $1 })
             ]),
             AyuMenuGroup(title: "Поведение", footer: nil, rows: [
+                .toggle(title: "«Повторить» в меню сообщения", subtitle: "Отправить сообщение ещё раз от себя", get: { $0.showRepeatInContextMenu }, set: { $0.showRepeatInContextMenu = $1 }),
+                .toggle(title: "«Детали» в меню сообщения", subtitle: "ID, даты, размер файла", get: { $0.showDetailsInContextMenu }, set: { $0.showDetailsInContextMenu = $1 }),
                 .toggle(title: "Без предупреждения о ссылках", subtitle: "Открывать скрытые ссылки сразу", get: { $0.disableOpenLinkWarning }, set: { $0.disableOpenLinkWarning = $1 }),
                 .toggle(title: "Подтверждать стикеры", subtitle: nil, get: { $0.stickerConfirmation }, set: { $0.stickerConfirmation = $1 }),
                 .toggle(title: "Подтверждать GIF", subtitle: nil, get: { $0.gifConfirmation }, set: { $0.gifConfirmation = $1 }),
@@ -862,6 +867,11 @@ private let ayuMenuIcons: [String: (String, UInt32)] = [
     "Импорт настроек из буфера": ("square.and.arrow.down.fill", 0x34C759),
     "Сбросить всё": ("arrow.counterclockwise", 0xFF3B30),
     "Отладочное меню Telegram": ("ladybug.fill", 0x8E8E93),
+    "Без хвостиков у пузырей": ("bubble.left", 0x007AFF),
+    "Раскрывать спойлеры": ("eye.fill", 0x5856D6),
+    "Фильтр «залго»-текста": ("textformat", 0x8E8E93),
+    "«Повторить» в меню сообщения": ("arrow.2.squarepath", 0x34C759),
+    "«Детали» в меню сообщения": ("info.circle.fill", 0x007AFF),
     "Локальные подарки в профиле": ("gift.fill", 0xFF2D55),
     "Добавить подарки": ("plus.circle.fill", 0x34C759),
     "Добавлено подарков": ("shippingbox.fill", 0xFF9500),

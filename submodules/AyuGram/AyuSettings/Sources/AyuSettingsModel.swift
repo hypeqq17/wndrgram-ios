@@ -67,6 +67,15 @@ public struct AyuSettingsData: Codable, Equatable {
     public var localPremium: Bool = false
     /// Show locally added gifts in the user's own profile ("skin changer").
     public var localGifts: Bool = false
+    /// Show spoiler text and media without tapping.
+    public var revealSpoilers: Bool = false
+    /// Strip stacked combining marks ("zalgo") from message text.
+    public var filterZalgo: Bool = true
+    /// Square message bubbles without the little tail.
+    public var removeMessageTail: Bool = false
+    /// Extra entries in the message context menu.
+    public var showRepeatInContextMenu: Bool = true
+    public var showDetailsInContextMenu: Bool = true
 
     // MARK: Ayu extras (not present in WndrGram Desktop)
     /// Do not let a chat be marked read when the app is opened from a notification.
@@ -145,6 +154,11 @@ public struct AyuSettingsData: Codable, Equatable {
         self.unlimitedRecentStickers = b(.unlimitedRecentStickers, d.unlimitedRecentStickers)
         self.localPremium = b(.localPremium, d.localPremium)
         self.localGifts = b(.localGifts, d.localGifts)
+        self.revealSpoilers = b(.revealSpoilers, d.revealSpoilers)
+        self.filterZalgo = b(.filterZalgo, d.filterZalgo)
+        self.removeMessageTail = b(.removeMessageTail, d.removeMessageTail)
+        self.showRepeatInContextMenu = b(.showRepeatInContextMenu, d.showRepeatInContextMenu)
+        self.showDetailsInContextMenu = b(.showDetailsInContextMenu, d.showDetailsInContextMenu)
 
         self.keepUnreadOnNotificationOpen = b(.keepUnreadOnNotificationOpen, d.keepUnreadOnNotificationOpen)
         self.privacyScreenInAppSwitcher = b(.privacyScreenInAppSwitcher, d.privacyScreenInAppSwitcher)

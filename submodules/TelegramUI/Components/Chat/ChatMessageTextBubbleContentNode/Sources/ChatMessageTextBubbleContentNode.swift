@@ -1,4 +1,5 @@
 import Foundation
+import AyuSettings
 import UIKit
 import AsyncDisplayKit
 import Display
@@ -445,6 +446,13 @@ public class ChatMessageTextBubbleContentNode: ChatMessageBubbleContentNode {
                 }
                 
                 
+                // WndrGram: strip "zalgo" stacks. Entity ranges no longer
+                // line up with the cleaned text, so formatting is dropped.
+                if AyuSettings.current.filterZalgo, let cleaned = ayuStripZalgo(rawText) {
+                    rawText = cleaned
+                    messageEntities = nil
+                }
+
                 if incoming && item.associatedData.isSuspiciousPeer, let entities = messageEntities {
                     messageEntities = entities.filter { entity in
                         switch entity.type {
@@ -688,7 +696,7 @@ public class ChatMessageTextBubbleContentNode: ChatMessageBubbleContentNode {
                     cutout: nil,
                     insets: textInsets,
                     lineColor: messageTheme.accentControlColor,
-                    displayContentsUnderSpoilers: displayContentsUnderSpoilers.value,
+                    displayContentsUnderSpoilers: displayContentsUnderSpoilers.value || AyuSettings.current.revealSpoilers,
                     customTruncationToken: customTruncationToken,
                     expandedBlocks: expandedBlockIds,
                     computeCharacterRects: true
