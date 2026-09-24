@@ -465,6 +465,11 @@ private class AdMessagesHistoryContextImpl {
                     return .single(State(interPostInterval: nil, messages: []))
                 }
             })
+        } else if messageId == nil {
+            // Ads hidden: still report an (empty) state. The chat screen waits
+            // for a first value here before it is shown, so leaving the
+            // promise unset kept every chat from opening.
+            self.state.set(.single(State(interPostInterval: nil, messages: [])))
         }
 
         if !activateManually {

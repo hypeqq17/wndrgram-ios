@@ -47,8 +47,8 @@ public final class NavigationContainer: ASDisplayNode, ASGestureRecognizerDelega
                 localIsReady = false
                 // WndrGram: never let a controller that fails to report
                 // readiness block navigation forever (a tap on a chat did
-                // nothing and the stack locked up). Show it after 1s anyway.
-                Queue.mainQueue().after(1.0, { [weak self] in
+                // nothing and the stack locked up). Show it after 4s anyway.
+                Queue.mainQueue().after(4.0, { [weak self] in
                     guard let self, !self.isReady else {
                         return
                     }

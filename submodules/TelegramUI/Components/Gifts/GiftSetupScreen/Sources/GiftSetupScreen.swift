@@ -4,6 +4,7 @@ import Display
 import AsyncDisplayKit
 import SwiftSignalKit
 import TelegramCore
+import AyuSettings
 import TelegramPresentationData
 import TelegramUIPreferences
 import TelegramStringFormatting
@@ -514,6 +515,18 @@ private final class GiftSetupScreenComponent: Component {
                 perUserLimit = starGift.perUserLimit?.total
                 giftFile = starGift.file
                 source = .starGift(hideName: self.hideName, includeUpgrade: self.includeUpgrade, peerId: peerId, giftId: starGift.id, text: textInputText.string, entities: entities)
+            }
+            
+            // WndrGram skin changer: a gift to yourself is added locally
+            // instead of being bought. Only visible on this device.
+            if AyuSettings.current.localGifts, peerId == context.account.peerId, case let .starGift(starGift, _) = component.subject {
+                AyuLocalGifts.add(.generic(starGift), text: textInputText.string.isEmpty ? nil : textInputText.string)
+                if let controller = environment.controller(), let navigationController = controller.navigationController as? NavigationController {
+                    let controllers = navigationController.viewControllers.filter { !($0 is GiftSetupScreen) && !($0 is GiftOptionsScreenProtocol) }
+                    navigationController.setViewControllers(controllers, animated: true)
+                    navigationController.view.addSubview(ConfettiView(frame: navigationController.view.bounds))
+                }
+                return
             }
             
             let proceed = { [weak self] in

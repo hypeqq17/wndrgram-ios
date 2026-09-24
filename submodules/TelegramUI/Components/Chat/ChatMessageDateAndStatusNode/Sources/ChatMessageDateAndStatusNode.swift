@@ -538,7 +538,26 @@ public class ChatMessageDateAndStatusNode: ASDisplayNode {
             }
             
             var updatedDateText = arguments.dateText
-            if arguments.edited {
+            // WndrGram: AyuGram-style trash / pencil icon instead of a text
+            // mark. It takes the (otherwise unused) view-count icon slot, so
+            // the existing layout places it right before the time.
+            var ayuShowsEditedIcon = false
+            var ayuIconName: String?
+            if updatedDateText.hasPrefix(ayuDeletedIconToken) {
+                updatedDateText = String(updatedDateText.dropFirst(ayuDeletedIconToken.count))
+                ayuIconName = "trash.fill"
+            } else if updatedDateText.hasPrefix(ayuEditedIconToken) {
+                updatedDateText = String(updatedDateText.dropFirst(ayuEditedIconToken.count))
+                ayuIconName = "pencil"
+                ayuShowsEditedIcon = true
+            }
+            if impressionImage == nil, let ayuIconName {
+                let pointSize = floor(arguments.presentationData.fontSize.baseDisplaySize * 10.0 / 17.0)
+                if let symbol = UIImage(systemName: ayuIconName, withConfiguration: UIImage.SymbolConfiguration(pointSize: pointSize, weight: .semibold)) {
+                    impressionImage = generateTintedImage(image: symbol, color: dateColor)
+                }
+            }
+            if arguments.edited && !ayuShowsEditedIcon {
                 if let useEditedTimestamp = arguments.context.getAppConfigValue("message_primary_edited_date") as? Bool, useEditedTimestamp {
                 } else {
                     updatedDateText = "\(arguments.presentationData.strings.Conversation_MessageEditedLabel) \(updatedDateText)"

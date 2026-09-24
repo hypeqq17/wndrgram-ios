@@ -57,6 +57,7 @@ swift_library(
         "//submodules/Postbox:Postbox",
         "//submodules/TelegramCore:TelegramCore",
         "//submodules/AyuGram/AyuSettings:AyuSettings",
+        "//submodules/AyuGram/AyuMessageArchive:AyuMessageArchive",
         "//submodules/MtProtoKit:MtProtoKit",
         "//submodules/TelegramPresentationData:TelegramPresentationData",
         "//submodules/AccountContext:AccountContext",

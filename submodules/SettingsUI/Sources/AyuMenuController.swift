@@ -352,13 +352,41 @@ public final class AyuMenuController: ViewController {
         return container
     }
 
-    private func makeTitleLabel(_ text: String, palette: AyuMenuPalette) -> UILabel {
+    private func makeTitleLabel(_ text: String, palette: AyuMenuPalette) -> UIView {
         let label = UILabel()
         label.text = text
         label.numberOfLines = 0
         label.font = UIFont.systemFont(ofSize: 17.0)
         label.textColor = palette.text
-        return label
+        return self.withIcon(text, label)
+    }
+
+    /// Puts the row's coloured icon tile in front of `content`, like the
+    /// rows of the iOS and Telegram settings screens.
+    private func withIcon(_ title: String, _ content: UIView) -> UIView {
+        guard let icon = ayuMenuIcons[title], let image = UIImage(systemName: icon.0, withConfiguration: UIImage.SymbolConfiguration(pointSize: 15.0, weight: .semibold)) else {
+            return content
+        }
+        let tile = UIView()
+        tile.backgroundColor = UIColor(rgb: icon.1)
+        tile.layer.cornerRadius = 7.0
+        tile.layer.cornerCurve = .continuous
+        let imageView = UIImageView(image: image)
+        imageView.tintColor = .white
+        imageView.contentMode = .center
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        tile.addSubview(imageView)
+        tile.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            tile.widthAnchor.constraint(equalToConstant: 29.0),
+            tile.heightAnchor.constraint(equalToConstant: 29.0),
+            imageView.centerXAnchor.constraint(equalTo: tile.centerXAnchor),
+            imageView.centerYAnchor.constraint(equalTo: tile.centerYAnchor)
+        ])
+        let stack = UIStackView(arrangedSubviews: [tile, content])
+        stack.alignment = .center
+        stack.spacing = 12.0
+        return stack
     }
 
     private func padded(_ content: UIView, vertical: CGFloat = 11.0) -> UIView {
@@ -536,7 +564,7 @@ public final class AyuMenuController: ViewController {
             button.ayuOn(.touchUpInside) {
                 action()
             }
-            return self.padded(button)
+            return self.padded(self.withIcon(title, button))
         }
     }
 
@@ -604,7 +632,12 @@ public final class AyuMenuController: ViewController {
 
     // MARK: - Content
 
+    private func pushController(_ controller: ViewController) {
+        (self.navigationController as? NavigationController)?.pushViewController(controller)
+    }
+
     private func makeGroups() -> [AyuMenuGroup] {
+        let context = self.context
         let percent: (Float) -> String = { "\(Int($0))%" }
         let points: (Float) -> String = { "\(Int($0))" }
 
@@ -627,6 +660,7 @@ public final class AyuMenuController: ViewController {
                 .toggle(title: "Сохранять удалённые", subtitle: nil, get: { $0.saveDeletedMessages }, set: { $0.saveDeletedMessages = $1 }),
                 .toggle(title: "Сохранять историю правок", subtitle: nil, get: { $0.saveMessagesHistory }, set: { $0.saveMessagesHistory = $1 }),
                 .toggle(title: "Сохранять медиа", subtitle: nil, get: { $0.saveDeletedMedia }, set: { $0.saveDeletedMedia = $1 }),
+                .toggle(title: "Одноразовые медиа", subtitle: "Фото, видео, кружки и голосовые с таймером не исчезают и открываются повторно", get: { $0.saveSelfDestructingMedia }, set: { $0.saveSelfDestructingMedia = $1 }),
                 .toggle(title: "Включая ботов", subtitle: nil, get: { $0.saveForBots }, set: { $0.saveForBots = $1 }),
                 .segmented(title: "Хранить", options: ["Всегда", "7 дн", "30 дн", "90 дн", "Год"], get: { settings in
                     return [0, 7, 30, 90, 365].firstIndex(of: settings.historyRetentionDays) ?? 0
@@ -639,10 +673,21 @@ public final class AyuMenuController: ViewController {
                 .toggle(title: "Показывать в чате", subtitle: nil, get: { $0.showDeletedMessages }, set: { $0.showDeletedMessages = $1 }),
                 .toggle(title: "Полупрозрачные", subtitle: nil, get: { $0.semiTransparentDeletedMessages }, set: { $0.semiTransparentDeletedMessages = $1 }),
                 .slider(title: "Непрозрачность", range: 10 ... 100, step: 5, format: percent, get: { Float($0.deletedMessageOpacity) }, set: { $0.deletedMessageOpacity = Int32($1) }),
+                .toggle(title: "Значок корзины у удалённых", subtitle: nil, get: { $0.showDeletedIcon }, set: { $0.showDeletedIcon = $1 }),
+                .toggle(title: "Значок карандаша у изменённых", subtitle: nil, get: { $0.showEditedIcon }, set: { $0.showEditedIcon = $1 }),
                 .text(title: "Метка удалённого", placeholder: "нет", get: { $0.deletedMark }, set: { $0.deletedMark = $1 }),
                 .text(title: "Метка изменённого", placeholder: "нет", get: { $0.editedMark }, set: { $0.editedMark = $1 })
             ]),
             AyuMenuGroup(title: "Внешний вид", footer: nil, rows: [
+                .button(title: "Оформление и темы", destructive: false, action: { [weak self] in
+                    self?.pushController(themeSettingsController(context: context))
+                }),
+                .button(title: "Создать свою тему (все цвета)", destructive: false, action: { [weak self] in
+                    guard let self else {
+                        return
+                    }
+                    self.pushController(editThemeController(context: context, mode: .create(self.presentationData.theme, nil)))
+                }),
                 .toggle(title: "Секунды во времени", subtitle: nil, get: { $0.showMessageSeconds }, set: { $0.showMessageSeconds = $1 }),
                 .slider(title: "Скругление пузырей", range: 0 ... 20, step: 1, format: points, get: { Float($0.messageBubbleRadius) }, set: { $0.messageBubbleRadius = Int32($1) }),
                 .slider(title: "Скругление аватарок", range: 0 ... 50, step: 5, format: { value in
@@ -671,6 +716,26 @@ public final class AyuMenuController: ViewController {
                 .toggle(title: "Размытие в переключателе приложений", subtitle: nil, get: { $0.privacyScreenInAppSwitcher }, set: { $0.privacyScreenInAppSwitcher = $1 }),
                 .toggle(title: "Режим стримера", subtitle: nil, get: { $0.streamerMode }, set: { $0.streamerMode = $1 }),
                 .toggle(title: "Не читать чат из уведомления", subtitle: nil, get: { $0.keepUnreadOnNotificationOpen }, set: { $0.keepUnreadOnNotificationOpen = $1 })
+            ]),
+            AyuMenuGroup(title: "Скинченджер подарков", footer: "Выбери любой подарок и «подари» его себе — он появится в твоём профиле бесплатно. Видно только на этом устройстве.", rows: [
+                .toggle(title: "Локальные подарки в профиле", subtitle: nil, get: { $0.localGifts }, set: { $0.localGifts = $1 }),
+                .button(title: "Добавить подарки", destructive: false, action: { [weak self] in
+                    guard let self else {
+                        return
+                    }
+                    if !AyuSettings.current.localGifts {
+                        AyuSettings.shared.update { settings in
+                            settings.localGifts = true
+                        }
+                    }
+                    self.pushController(context.sharedContext.makeGiftOptionsController(context: context, peerId: context.account.peerId, premiumOptions: [], hasBirthday: false, completion: nil))
+                }),
+                .info(title: "Добавлено подарков", value: {
+                    return "\(AyuLocalGifts.count)"
+                }),
+                .button(title: "Удалить локальные подарки", destructive: true, action: {
+                    AyuLocalGifts.removeAll()
+                })
             ]),
             AyuMenuGroup(title: "Хранилище", footer: nil, rows: [
                 .button(title: "Открыть архив сообщений", destructive: false, action: { [weak self] in
@@ -742,3 +807,63 @@ private extension UIControl {
         objc_setAssociatedObject(self, &ayuControlHandlersKey, handlers, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
 }
+
+private let ayuMenuIcons: [String: (String, UInt32)] = [
+    "Отправлять прочтения": ("checkmark.message.fill", 0x34C759),
+    "Просмотры историй": ("eye.circle.fill", 0xFF9500),
+    "Статус «онлайн»": ("dot.radiowaves.left.and.right", 0x30B0C7),
+    "Статус «печатает»": ("ellipsis.bubble.fill", 0x007AFF),
+    "Прогресс загрузки": ("arrow.up.circle.fill", 0x5856D6),
+    "Уходить в офлайн сразу": ("moon.fill", 0x8E8E93),
+    "Читать чат после ответа": ("arrowshape.turn.up.left.fill", 0x34C759),
+    "Отправлять как отложенные": ("clock.fill", 0xFF9500),
+    "Спрашивать перед историей": ("questionmark.circle.fill", 0xAF52DE),
+    "Отправлять без звука": ("bell.slash.fill", 0xFF3B30),
+    "Сохранять удалённые": ("trash.slash.fill", 0xFF3B30),
+    "Сохранять историю правок": ("pencil.and.list.clipboard", 0xFF9500),
+    "Сохранять медиа": ("photo.on.rectangle.angled", 0x007AFF),
+    "Одноразовые медиа": ("flame.fill", 0xFF2D55),
+    "Включая ботов": ("cpu.fill", 0x8E8E93),
+    "Хранить": ("calendar", 0x5856D6),
+    "Показывать в чате": ("text.bubble.fill", 0x007AFF),
+    "Полупрозрачные": ("circle.lefthalf.filled", 0x8E8E93),
+    "Непрозрачность": ("slider.horizontal.3", 0x8E8E93),
+    "Значок корзины у удалённых": ("trash.fill", 0xFF3B30),
+    "Значок карандаша у изменённых": ("pencil", 0xFF9500),
+    "Метка удалённого": ("tag.fill", 0xFF3B30),
+    "Метка изменённого": ("tag.fill", 0xFF9500),
+    "Секунды во времени": ("stopwatch.fill", 0x30B0C7),
+    "Скругление пузырей": ("bubble.left.fill", 0x007AFF),
+    "Скругление аватарок": ("person.crop.circle.fill", 0xAF52DE),
+    "ID в профиле": ("number.circle.fill", 0x5856D6),
+    "Скрыть папку «Все чаты»": ("folder.fill", 0x007AFF),
+    "Скрыть истории": ("circle.dashed", 0xFF9500),
+    "Скрыть рекламу": ("megaphone.fill", 0xFF3B30),
+    "Скрыть похожие каналы": ("rectangle.stack.fill", 0x8E8E93),
+    "Скрыть счётчики": ("app.badge.fill", 0xFF3B30),
+    "Оформление и темы": ("paintbrush.fill", 0x007AFF),
+    "Создать свою тему (все цвета)": ("paintpalette.fill", 0xFF2D55),
+    "Без предупреждения о ссылках": ("link", 0x007AFF),
+    "Подтверждать стикеры": ("face.smiling.inverse", 0xFF9500),
+    "Подтверждать GIF": ("sparkles.rectangle.stack.fill", 0x34C759),
+    "Подтверждать голосовые": ("mic.fill", 0xFF3B30),
+    "Подтверждать кружки": ("video.circle.fill", 0x5856D6),
+    "Без приветственного стикера": ("hand.wave.fill", 0xFF9500),
+    "Безлимит недавних стикеров": ("infinity", 0x30B0C7),
+    "Локальный Premium": ("star.fill", 0xAF52DE),
+    "Размытие в переключателе приложений": ("rectangle.on.rectangle", 0x8E8E93),
+    "Режим стримера": ("video.slash.fill", 0xFF3B30),
+    "Не читать чат из уведомления": ("bell.badge.fill", 0xFF9500),
+    "Открыть архив сообщений": ("archivebox.fill", 0x5856D6),
+    "Face ID для архива": ("faceid", 0x34C759),
+    "Размер архива": ("internaldrive.fill", 0x8E8E93),
+    "Очистить архив": ("trash.fill", 0xFF3B30),
+    "Экспорт настроек в буфер": ("square.and.arrow.up.fill", 0x007AFF),
+    "Импорт настроек из буфера": ("square.and.arrow.down.fill", 0x34C759),
+    "Сбросить всё": ("arrow.counterclockwise", 0xFF3B30),
+    "Отладочное меню Telegram": ("ladybug.fill", 0x8E8E93),
+    "Локальные подарки в профиле": ("gift.fill", 0xFF2D55),
+    "Добавить подарки": ("plus.circle.fill", 0x34C759),
+    "Добавлено подарков": ("shippingbox.fill", 0xFF9500),
+    "Удалить локальные подарки": ("trash.fill", 0xFF3B30)
+]

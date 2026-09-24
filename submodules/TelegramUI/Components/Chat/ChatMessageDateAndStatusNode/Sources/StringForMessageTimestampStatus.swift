@@ -249,28 +249,44 @@ public func stringForMessageTimestampStatus(
         }
     }
 
-    if let mark = ayuStatusMark(for: message) {
-        dateText = "\(mark) \(dateText)"
-    }
+    dateText = ayuStatusPrefix(for: message) + dateText
 
     return dateText
 }
 
-/// The marker AyuGram puts in front of the timestamp for messages the server
-/// dropped, or that were edited, when the user configured one.
-private func ayuStatusMark(for message: EngineMessage) -> String? {
+/// Invisible tokens put in front of the date text; `ChatMessageDateAndStatusNode`
+/// strips them and draws the matching AyuGram icon instead.
+let ayuDeletedIconToken = "\u{E0D1}"
+let ayuEditedIconToken = "\u{E0D2}"
+
+/// What goes in front of the timestamp for messages the server dropped, or
+/// that were edited: an icon token and/or the user's own text mark.
+private func ayuStatusPrefix(for message: EngineMessage) -> String {
     let settings = AyuSettings.current
     // Walk the attributes directly: `_asMessage()` rebuilds the whole message
     // and this runs for every row of the history list.
+    var isDeleted = false
     for attribute in message.attributes {
         if attribute is AyuDeletedMessageAttribute {
-            let mark = settings.deletedMark
-            return mark.isEmpty ? nil : mark
+            isDeleted = true
+            break
         }
     }
-    if message.editedTime != nil {
-        let mark = settings.editedMark
-        return mark.isEmpty ? nil : mark
+    var prefix = ""
+    if isDeleted {
+        if settings.showDeletedIcon {
+            prefix += ayuDeletedIconToken
+        }
+        if !settings.deletedMark.isEmpty {
+            prefix += settings.deletedMark + " "
+        }
+    } else if message.editedTime != nil {
+        if settings.showEditedIcon {
+            prefix += ayuEditedIconToken
+        }
+        if !settings.editedMark.isEmpty {
+            prefix += settings.editedMark + " "
+        }
     }
-    return nil
+    return prefix
 }

@@ -3012,7 +3012,7 @@ public final class ProfileGiftsContext {
     private let impl: QueueLocalObject<ProfileGiftsContextImpl>
     
     public var state: Signal<ProfileGiftsContext.State, NoError> {
-        return Signal { subscriber in
+        let base = Signal<ProfileGiftsContext.State, NoError> { subscriber in
             let disposable = MetaDisposable()
             
             self.impl.with { impl in
@@ -3022,6 +3022,13 @@ public final class ProfileGiftsContext {
             }
             
             return disposable
+        }
+        // WndrGram: mix in the locally added "skin changer" gifts.
+        let peerId = self.peerId
+        let collectionId = self.collectionId
+        return combineLatest(base, AyuLocalGifts.version.get())
+        |> map { state, _ -> ProfileGiftsContext.State in
+            return AyuLocalGifts.inject(into: state, peerId: peerId, collectionId: collectionId)
         }
     }
     

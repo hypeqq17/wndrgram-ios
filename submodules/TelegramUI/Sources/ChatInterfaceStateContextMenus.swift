@@ -1,6 +1,8 @@
 import Foundation
 import UIKit
 import TelegramCore
+import AyuMessageArchive
+import AyuSettings
 import AsyncDisplayKit
 import Display
 import UIKit
@@ -1329,6 +1331,51 @@ func contextMenuForChatPresentationInterfaceState(chatPresentationInterfaceState
             if media is TelegramMediaImage {
                 isImage = true
             }
+        }
+        
+        // WndrGram: edit history kept by the local archive, and the message id.
+        let ayuRevisions = AyuMessageArchive.shared.revisions(of: message.id)
+        if !ayuRevisions.isEmpty {
+            actions.append(.action(ContextMenuActionItem(text: "История правок (\(ayuRevisions.count))", icon: { theme in
+                return generateTintedImage(image: UIImage(systemName: "clock.arrow.circlepath"), color: theme.actionSheet.primaryTextColor)
+            }, action: { c, _ in
+                c?.dismiss(completion: {
+                    let presentationData = context.sharedContext.currentPresentationData.with { $0 }
+                    let formatter = DateFormatter()
+                    formatter.dateStyle = .short
+                    formatter.timeStyle = .medium
+                    var text = ""
+                    for (index, revision) in ayuRevisions.enumerated() {
+                        let date = formatter.string(from: Date(timeIntervalSince1970: TimeInterval(revision.archivedTimestamp)))
+                        text += "Версия \(index + 1) · до \(date)
+\(revision.text.isEmpty ? "(без текста)" : revision.text)
+
+"
+                    }
+                    text += "Сейчас:
+\(message.text)"
+                    controllerInteraction.presentController(textAlertController(
+                        context: context,
+                        title: "История правок",
+                        text: text,
+                        actions: [
+                            TextAlertAction(type: .genericAction, title: "Копировать всё", action: {
+                                UIPasteboard.general.string = text
+                            }),
+                            TextAlertAction(type: .defaultAction, title: presentationData.strings.Common_OK, action: {})
+                        ],
+                        actionLayout: .vertical
+                    ), nil)
+                })
+            })))
+        }
+        if AyuSettings.current.showPeerId != .hidden {
+            actions.append(.action(ContextMenuActionItem(text: "Скопировать ID сообщения", icon: { theme in
+                return generateTintedImage(image: UIImage(systemName: "number"), color: theme.actionSheet.primaryTextColor)
+            }, action: { _, f in
+                UIPasteboard.general.string = "\(message.id.id)"
+                f(.default)
+            })))
         }
         
         let isCopyProtected = chatPresentationInterfaceState.copyProtectionEnabled || message.isCopyProtected()

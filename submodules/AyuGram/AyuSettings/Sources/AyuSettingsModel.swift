@@ -37,8 +37,12 @@ public struct AyuSettingsData: Codable, Equatable {
     public var historyRetentionDays: Int32 = 0 // 0 == forever
 
     // MARK: Chat appearance
-    public var deletedMark: String = "\u{1F9F9}"
+    /// Optional text shown before the time of kept deleted / edited messages.
+    public var deletedMark: String = ""
     public var editedMark: String = ""
+    /// AyuGram-style trash / pencil icons next to the time.
+    public var showDeletedIcon: Bool = true
+    public var showEditedIcon: Bool = true
     public var showDeletedMessages: Bool = true
     public var semiTransparentDeletedMessages: Bool = false
     public var showMessageSeconds: Bool = false
@@ -61,6 +65,8 @@ public struct AyuSettingsData: Codable, Equatable {
     public var roundConfirmation: Bool = false
     public var unlimitedRecentStickers: Bool = false
     public var localPremium: Bool = false
+    /// Show locally added gifts in the user's own profile ("skin changer").
+    public var localGifts: Bool = false
 
     // MARK: Ayu extras (not present in WndrGram Desktop)
     /// Do not let a chat be marked read when the app is opened from a notification.
@@ -112,7 +118,11 @@ public struct AyuSettingsData: Codable, Equatable {
         self.saveSelfDestructingMedia = b(.saveSelfDestructingMedia, d.saveSelfDestructingMedia)
         self.historyRetentionDays = i(.historyRetentionDays, d.historyRetentionDays)
 
-        self.deletedMark = s(.deletedMark, d.deletedMark)
+        // The old default was a broom emoji; the icon replaces it now.
+        let storedDeletedMark = s(.deletedMark, d.deletedMark)
+        self.deletedMark = storedDeletedMark == "\u{1F9F9}" ? "" : storedDeletedMark
+        self.showDeletedIcon = b(.showDeletedIcon, d.showDeletedIcon)
+        self.showEditedIcon = b(.showEditedIcon, d.showEditedIcon)
         self.editedMark = s(.editedMark, d.editedMark)
         self.showDeletedMessages = b(.showDeletedMessages, d.showDeletedMessages)
         self.semiTransparentDeletedMessages = b(.semiTransparentDeletedMessages, d.semiTransparentDeletedMessages)
@@ -134,6 +144,7 @@ public struct AyuSettingsData: Codable, Equatable {
         self.roundConfirmation = b(.roundConfirmation, d.roundConfirmation)
         self.unlimitedRecentStickers = b(.unlimitedRecentStickers, d.unlimitedRecentStickers)
         self.localPremium = b(.localPremium, d.localPremium)
+        self.localGifts = b(.localGifts, d.localGifts)
 
         self.keepUnreadOnNotificationOpen = b(.keepUnreadOnNotificationOpen, d.keepUnreadOnNotificationOpen)
         self.privacyScreenInAppSwitcher = b(.privacyScreenInAppSwitcher, d.privacyScreenInAppSwitcher)

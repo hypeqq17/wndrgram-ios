@@ -14,6 +14,7 @@ public func initializeAyuGram(containerPath: String) {
     let containerURL = URL(fileURLWithPath: containerPath, isDirectory: true)
     AyuSettings.shared.configure(containerURL: containerURL)
     AyuMessageArchive.shared.configure(containerURL: containerURL)
+    AyuLocalGifts.configure(containerURL: containerURL)
 
     AyuMessageArchiveBotClassifier.isBot = { peer in
         if let user = peer as? TelegramUser {
@@ -322,6 +323,13 @@ public enum AyuLocalPremium {
         lock.unlock()
     }
 
+    public static func isAccountPeer(_ peerId: PeerId) -> Bool {
+        lock.lock()
+        let result = accountPeerIds.contains(peerId)
+        lock.unlock()
+        return result
+    }
+
     public static func applies(to peerId: PeerId) -> Bool {
         guard AyuSettings.current.localPremium else {
             return false
@@ -330,5 +338,126 @@ public enum AyuLocalPremium {
         let result = accountPeerIds.contains(peerId)
         lock.unlock()
         return result
+    }
+}
+
+/// WndrGram "skin changer": gifts added on this device only. They appear in
+/// the user's own profile gift list when the option is on; nothing is bought
+/// and nobody else sees them.
+public enum AyuLocalGifts {
+    private struct Entry: Codable {
+        let gift: StarGift
+        let date: Int32
+        let text: String?
+    }
+
+    private static let lock = NSLock()
+    private static var entries: [Entry] = []
+    private static var storeURL: URL?
+    private static var versionValue: Int32 = 0
+
+    /// Bumped on every change so profile screens refresh.
+    public static let version = ValuePromise<Int32>(0, ignoreRepeated: false)
+
+    static func configure(containerURL: URL) {
+        let url = containerURL.appendingPathComponent("wndrgram-local-gifts.json")
+        var loaded: [Entry] = []
+        if let data = try? Data(contentsOf: url), let decoded = try? JSONDecoder().decode([Entry].self, from: data) {
+            loaded = decoded
+        }
+        lock.lock()
+        storeURL = url
+        entries = loaded
+        lock.unlock()
+        bump()
+    }
+
+    public static var count: Int {
+        lock.lock()
+        let result = entries.count
+        lock.unlock()
+        return result
+    }
+
+    public static func add(_ gift: StarGift, text: String?) {
+        lock.lock()
+        entries.insert(Entry(gift: gift, date: Int32(Date().timeIntervalSince1970), text: text), at: 0)
+        let snapshot = entries
+        let url = storeURL
+        lock.unlock()
+        persist(snapshot, url: url)
+        bump()
+    }
+
+    public static func removeAll() {
+        lock.lock()
+        entries.removeAll()
+        let url = storeURL
+        lock.unlock()
+        persist([], url: url)
+        bump()
+    }
+
+    private static func persist(_ snapshot: [Entry], url: URL?) {
+        guard let url, let data = try? JSONEncoder().encode(snapshot) else {
+            return
+        }
+        try? data.write(to: url, options: .atomic)
+    }
+
+    private static func bump() {
+        lock.lock()
+        versionValue += 1
+        let value = versionValue
+        lock.unlock()
+        version.set(value)
+    }
+
+    static func inject(into state: ProfileGiftsContext.State, peerId: PeerId, collectionId: Int32?) -> ProfileGiftsContext.State {
+        guard collectionId == nil, AyuSettings.current.localGifts, AyuLocalPremium.isAccountPeer(peerId) else {
+            return state
+        }
+        lock.lock()
+        let snapshot = entries
+        lock.unlock()
+        if snapshot.isEmpty {
+            return state
+        }
+        let local = snapshot.map { entry in
+            return ProfileGiftsContext.State.StarGift(
+                gift: entry.gift,
+                reference: nil,
+                fromPeer: nil,
+                date: entry.date,
+                text: entry.text,
+                entities: nil,
+                nameHidden: false,
+                savedToProfile: true,
+                pinnedToTop: false,
+                convertStars: nil,
+                canUpgrade: false,
+                canExportDate: nil,
+                upgradeStars: nil,
+                transferStars: nil,
+                canTransferDate: nil,
+                canResaleDate: nil,
+                collectionIds: nil,
+                prepaidUpgradeHash: nil,
+                upgradeSeparate: false,
+                dropOriginalDetailsStars: nil,
+                number: nil,
+                isRefunded: false,
+                canCraftAt: nil
+            )
+        }
+        var state = state
+        state.gifts = local + state.gifts
+        state.filteredGifts = local + state.filteredGifts
+        if let count = state.count {
+            state.count = count + Int32(local.count)
+        } else {
+            state.count = Int32(local.count)
+        }
+        return state
     }
 }
