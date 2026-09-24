@@ -470,3 +470,24 @@ func ayuFilterEmojiStatus(_ peerId: PeerId, _ status: PeerEmojiStatus?) -> PeerE
     }
     return AyuLocalPremium.isAccountPeer(peerId) ? status : nil
 }
+
+/// WndrGram: hide reactions under messages in channels, groups or private
+/// chats, as configured.
+func ayuReactionsHidden(in message: Message) -> Bool {
+    let settings = AyuSettings.current
+    if settings.showChannelReactions && settings.showGroupReactions && settings.showPrivateReactions {
+        return false
+    }
+    let peerId = message.id.peerId
+    switch peerId.namespace {
+    case Namespaces.Peer.CloudChannel:
+        if let channel = message.peers[peerId] as? TelegramChannel, case .broadcast = channel.info {
+            return !settings.showChannelReactions
+        }
+        return !settings.showGroupReactions
+    case Namespaces.Peer.CloudGroup:
+        return !settings.showGroupReactions
+    default:
+        return !settings.showPrivateReactions
+    }
+}

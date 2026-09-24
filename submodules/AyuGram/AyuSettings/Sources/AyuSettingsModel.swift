@@ -77,6 +77,10 @@ public struct AyuSettingsData: Codable, Equatable {
     public var hidePremiumStatuses: Bool = false
     /// Ignore wallpapers other people set for a chat.
     public var disableCustomBackgrounds: Bool = false
+    /// Show reactions under messages, per kind of chat.
+    public var showChannelReactions: Bool = true
+    public var showGroupReactions: Bool = true
+    public var showPrivateReactions: Bool = true
     /// Extra entries in the message context menu.
     public var showRepeatInContextMenu: Bool = true
     public var showDetailsInContextMenu: Bool = true
@@ -163,6 +167,9 @@ public struct AyuSettingsData: Codable, Equatable {
         self.removeMessageTail = b(.removeMessageTail, d.removeMessageTail)
         self.hidePremiumStatuses = b(.hidePremiumStatuses, d.hidePremiumStatuses)
         self.disableCustomBackgrounds = b(.disableCustomBackgrounds, d.disableCustomBackgrounds)
+        self.showChannelReactions = b(.showChannelReactions, d.showChannelReactions)
+        self.showGroupReactions = b(.showGroupReactions, d.showGroupReactions)
+        self.showPrivateReactions = b(.showPrivateReactions, d.showPrivateReactions)
         self.showRepeatInContextMenu = b(.showRepeatInContextMenu, d.showRepeatInContextMenu)
         self.showDetailsInContextMenu = b(.showDetailsInContextMenu, d.showDetailsInContextMenu)
 
