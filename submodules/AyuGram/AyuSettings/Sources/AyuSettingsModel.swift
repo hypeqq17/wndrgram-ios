@@ -32,6 +32,8 @@ public struct AyuSettingsData: Codable, Equatable {
     public var saveMessagesHistory: Bool = true
     public var saveForBots: Bool = false
     public var saveDeletedMedia: Bool = true
+    /// Keep view-once and timer photos/videos/voice after they "expire".
+    public var saveSelfDestructingMedia: Bool = true
     public var historyRetentionDays: Int32 = 0 // 0 == forever
 
     // MARK: Chat appearance
@@ -107,6 +109,7 @@ public struct AyuSettingsData: Codable, Equatable {
         self.saveMessagesHistory = b(.saveMessagesHistory, d.saveMessagesHistory)
         self.saveForBots = b(.saveForBots, d.saveForBots)
         self.saveDeletedMedia = b(.saveDeletedMedia, d.saveDeletedMedia)
+        self.saveSelfDestructingMedia = b(.saveSelfDestructingMedia, d.saveSelfDestructingMedia)
         self.historyRetentionDays = i(.historyRetentionDays, d.historyRetentionDays)
 
         self.deletedMark = s(.deletedMark, d.deletedMark)

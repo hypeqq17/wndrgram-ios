@@ -108,6 +108,10 @@ public func initializeAyuGram(containerPath: String) {
         return idsToDelete
     }
 
+    PostboxMessageDeletionHook.transformUpdate = { _, message, update in
+        return ayuKeepSelfDestructingMedia(message: message, update: update)
+    }
+
     PostboxMessageDeletionHook.willUpdate = { _, message, update in
         guard AyuSettings.current.saveMessagesHistory else {
             return
@@ -259,4 +263,72 @@ func ayuReadAfterAction(transaction: Transaction, account: Account, peerId: Peer
 /// notification counters" is on. Used by the notification service extension.
 public func ayuNotificationBadge(_ value: Int) -> Int {
     return AyuSettings.current.hideNotificationCounters ? 0 : value
+}
+
+/// WndrGram "keep self-destructing media": when a view-once or timer photo,
+/// video, round video or voice message in a cloud chat is about to be
+/// replaced by the "expired" placeholder (locally after viewing, or by the
+/// server), keep the original media and drop the timer so it can be reopened.
+/// Secret chats are left alone.
+private func ayuKeepSelfDestructingMedia(message: Message, update: PostboxUpdateMessage) -> PostboxUpdateMessage {
+    guard AyuSettings.current.saveSelfDestructingMedia else {
+        return update
+    }
+    guard case let .update(store) = update else {
+        return update
+    }
+    guard message.id.peerId.namespace != Namespaces.Peer.SecretChat, message.id.namespace == Namespaces.Message.Cloud else {
+        return update
+    }
+    let becomesExpired = store.media.contains(where: { $0 is TelegramMediaExpiredContent })
+    let hadRealMedia = message.media.contains(where: { $0 is TelegramMediaImage || $0 is TelegramMediaFile })
+    guard becomesExpired && hadRealMedia else {
+        return update
+    }
+    guard case let .Id(id) = store.id else {
+        return update
+    }
+    let attributes = store.attributes.filter { !($0 is AutoclearTimeoutMessageAttribute) && !($0 is AutoremoveTimeoutMessageAttribute) }
+    return .update(StoreMessage(
+        id: id,
+        customStableId: store.customStableId,
+        globallyUniqueId: store.globallyUniqueId,
+        groupingKey: store.groupingKey,
+        threadId: store.threadId,
+        timestamp: store.timestamp,
+        flags: store.flags,
+        tags: store.tags,
+        globalTags: store.globalTags,
+        localTags: store.localTags,
+        forwardInfo: store.forwardInfo,
+        authorId: store.authorId,
+        text: store.text,
+        attributes: attributes,
+        media: message.media
+    ))
+}
+
+/// WndrGram "local premium": the client treats the user's own accounts as
+/// Premium, unlocking Premium-gated UI on this device. The server is not
+/// involved, so server-enforced perks (upload size, sending premium-only
+/// content to others) are unaffected.
+public enum AyuLocalPremium {
+    private static let lock = NSLock()
+    private static var accountPeerIds = Set<PeerId>()
+
+    static func registerAccountPeerId(_ peerId: PeerId) {
+        lock.lock()
+        accountPeerIds.insert(peerId)
+        lock.unlock()
+    }
+
+    public static func applies(to peerId: PeerId) -> Bool {
+        guard AyuSettings.current.localPremium else {
+            return false
+        }
+        lock.lock()
+        let result = accountPeerIds.contains(peerId)
+        lock.unlock()
+        return result
+    }
 }

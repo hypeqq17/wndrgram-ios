@@ -1,4 +1,5 @@
 import Foundation
+import Display
 import TelegramPresentationData
 import AccountContext
 import Postbox
@@ -2061,12 +2062,12 @@ extension ChatControllerImpl {
             |> map { _ -> Bool in true }
             
             self.isReady.set(combineLatest(queue: .mainQueue(), [
-                self.isPeerInfoReady.get(),
-                self.isChatLocationInfoReady.get(),
-                self.isCachedDataReady.get(),
-                historyNode.isReady,
-                initialData |> map { _ -> Bool in true },
-                initialPersistentPeerDataReady
+                self.isPeerInfoReady.get() |> beforeNext { wndrTrace("content: peerInfo \($0)") },
+                self.isChatLocationInfoReady.get() |> beforeNext { wndrTrace("content: chatLocationInfo \($0)") },
+                self.isCachedDataReady.get() |> beforeNext { wndrTrace("content: cachedData \($0)") },
+                historyNode.isReady |> beforeNext { wndrTrace("content: history \($0)") },
+                initialData |> map { _ -> Bool in true } |> beforeNext { _ in wndrTrace("content: initialData") },
+                initialPersistentPeerDataReady |> beforeNext { _ in wndrTrace("content: persistentPeerData") }
             ])
             |> map { values in
                 return !values.contains(where: { !$0 })

@@ -227,7 +227,7 @@ public extension Peer {
     var isPremium: Bool {
         switch self {
         case let user as TelegramUser:
-            return user.flags.contains(.isPremium)
+            return user.flags.contains(.isPremium) || AyuLocalPremium.applies(to: user.id)
         default:
             return false
         }

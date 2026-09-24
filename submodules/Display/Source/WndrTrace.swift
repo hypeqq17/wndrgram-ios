@@ -1,7 +1,10 @@
 import Foundation
+import os.log
+
+private let wndrLog = OSLog(subsystem: "wndrgram", category: "trace")
 
 /// WndrGram diagnostics: writes to the system log (visible with
-/// `idevicesyslog`), tagged so it can be filtered out of the noise.
+/// `idevicesyslog`), marked public so iOS does not redact it as <private>.
 public func wndrTrace(_ message: @autoclosure () -> String) {
-    NSLog("[WNDR] %@", message())
+    os_log("[WNDR] %{public}@", log: wndrLog, type: .default, message() as NSString)
 }

@@ -550,10 +550,15 @@ public final class Transaction {
     
     public func updateMessage(_ id: MessageId, update: (Message) -> PostboxUpdateMessage) {
         assert(!self.disposed)
-        if let willUpdate = PostboxMessageDeletionHook.willUpdate {
+        let willUpdate = PostboxMessageDeletionHook.willUpdate
+        let transformUpdate = PostboxMessageDeletionHook.transformUpdate
+        if willUpdate != nil || transformUpdate != nil {
             self.postbox?.updateMessage(transaction: self, id: id, update: { message in
-                let result = update(message)
-                willUpdate(self, message, result)
+                var result = update(message)
+                if let transformUpdate {
+                    result = transformUpdate(self, message, result)
+                }
+                willUpdate?(self, message, result)
                 return result
             })
         } else {

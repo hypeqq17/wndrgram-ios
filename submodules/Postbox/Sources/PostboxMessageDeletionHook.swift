@@ -22,4 +22,8 @@ public enum PostboxMessageDeletionHook {
     /// with the update that is about to replace it, so an observer can keep the
     /// previous revision. Same threading rules as `willDelete`.
     public static var willUpdate: ((Transaction, Message, PostboxUpdateMessage) -> Void)?
+
+    /// Lets an observer rewrite an update before it is applied (for example to
+    /// keep media that is about to be replaced). Runs before `willUpdate`.
+    public static var transformUpdate: ((Transaction, Message, PostboxUpdateMessage) -> PostboxUpdateMessage)?
 }
