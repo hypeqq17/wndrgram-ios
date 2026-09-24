@@ -1,4 +1,5 @@
 import Foundation
+import AyuSettings
 import Display
 import TelegramPresentationData
 import AccountContext
@@ -2304,12 +2305,12 @@ extension ChatControllerImpl {
                         var chatWallpaper: TelegramWallpaper?
                         if let cachedData = cachedData as? CachedUserData {
                             chatTheme = cachedData.chatTheme
-                            chatWallpaper = cachedData.wallpaper
+                            chatWallpaper = AyuSettings.current.disableCustomBackgrounds ? nil : cachedData.wallpaper
                         } else if let cachedData = cachedData as? CachedGroupData {
                             chatTheme = cachedData.chatTheme
                         } else if let cachedData = cachedData as? CachedChannelData {
                             chatTheme = cachedData.chatTheme
-                            chatWallpaper = cachedData.wallpaper
+                            chatWallpaper = AyuSettings.current.disableCustomBackgrounds ? nil : cachedData.wallpaper
                         }
                         
                         strongSelf.chatThemePromise.set(.single(chatTheme))

@@ -73,6 +73,10 @@ public struct AyuSettingsData: Codable, Equatable {
     public var filterZalgo: Bool = true
     /// Square message bubbles without the little tail.
     public var removeMessageTail: Bool = false
+    /// Hide other people's emoji statuses next to their names.
+    public var hidePremiumStatuses: Bool = false
+    /// Ignore wallpapers other people set for a chat.
+    public var disableCustomBackgrounds: Bool = false
     /// Extra entries in the message context menu.
     public var showRepeatInContextMenu: Bool = true
     public var showDetailsInContextMenu: Bool = true
@@ -157,6 +161,8 @@ public struct AyuSettingsData: Codable, Equatable {
         self.revealSpoilers = b(.revealSpoilers, d.revealSpoilers)
         self.filterZalgo = b(.filterZalgo, d.filterZalgo)
         self.removeMessageTail = b(.removeMessageTail, d.removeMessageTail)
+        self.hidePremiumStatuses = b(.hidePremiumStatuses, d.hidePremiumStatuses)
+        self.disableCustomBackgrounds = b(.disableCustomBackgrounds, d.disableCustomBackgrounds)
         self.showRepeatInContextMenu = b(.showRepeatInContextMenu, d.showRepeatInContextMenu)
         self.showDetailsInContextMenu = b(.showDetailsInContextMenu, d.showDetailsInContextMenu)
 

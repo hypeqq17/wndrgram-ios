@@ -461,3 +461,12 @@ public enum AyuLocalGifts {
         return state
     }
 }
+
+/// WndrGram "hide premium statuses": drop other people's emoji statuses as
+/// user objects arrive from the server. The user's own status is kept.
+func ayuFilterEmojiStatus(_ peerId: PeerId, _ status: PeerEmojiStatus?) -> PeerEmojiStatus? {
+    guard status != nil, AyuSettings.current.hidePremiumStatuses else {
+        return status
+    }
+    return AyuLocalPremium.isAccountPeer(peerId) ? status : nil
+}
