@@ -10,6 +10,7 @@ enum ApplicationShortcutItemType: String {
     case savedMessages
     case account
     case appIcon
+    case ghostMode
 }
 
 struct ApplicationShortcutItem: Equatable {
@@ -35,12 +36,20 @@ extension ApplicationShortcutItem {
                 icon = UIApplicationShortcutIcon(templateImageName: "Shortcuts/Account")
             case .appIcon:
                 icon = UIApplicationShortcutIcon(templateImageName: "Shortcuts/AppIcon")
+            case .ghostMode:
+                icon = UIApplicationShortcutIcon(systemImageName: "eye.slash.fill")
         }
         return UIApplicationShortcutItem(type: self.type.rawValue, localizedTitle: self.title, localizedSubtitle: self.subtitle, icon: icon, userInfo: nil)
     }
 }
 
-func applicationShortcutItems(strings: PresentationStrings, otherAccountName: String?) -> [ApplicationShortcutItem] {
+func applicationShortcutItems(strings: PresentationStrings, otherAccountName: String?, ghostModeEnabled: Bool) -> [ApplicationShortcutItem] {
+    // WndrGram: one-tap ghost mode from the Home Screen icon menu.
+    let ghostItem = ApplicationShortcutItem(type: .ghostMode, title: ghostModeEnabled ? "Выключить режим призрака" : "Включить режим призрака", subtitle: ghostModeEnabled ? "Сейчас: призрак" : nil)
+    return [ghostItem] + stockApplicationShortcutItems(strings: strings, otherAccountName: otherAccountName)
+}
+
+private func stockApplicationShortcutItems(strings: PresentationStrings, otherAccountName: String?) -> [ApplicationShortcutItem] {
     if let otherAccountName = otherAccountName {
         return [
             ApplicationShortcutItem(type: .search, title: strings.Common_Search, subtitle: nil),

@@ -1523,7 +1523,14 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                         }
                     } |> mapToSignal { otherAccountName -> Signal<[ApplicationShortcutItem], NoError> in
                         let presentationData = context.context.sharedContext.currentPresentationData.with { $0 }
-                        return .single(applicationShortcutItems(strings: presentationData.strings, otherAccountName: otherAccountName))
+                        return AyuSettings.shared.signal
+                        |> map { settings -> Bool in
+                            return settings.isGhostModeEnabled
+                        }
+                        |> distinctUntilChanged
+                        |> map { ghostModeEnabled -> [ApplicationShortcutItem] in
+                            return applicationShortcutItems(strings: presentationData.strings, otherAccountName: otherAccountName, ghostModeEnabled: ghostModeEnabled)
+                        }
                     }
                 } else {
                     return .single([])
@@ -2756,6 +2763,11 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
         |> take(1)
         |> deliverOnMainQueue).start(next: { sharedContext in
             let type = ApplicationShortcutItemType(rawValue: shortcutItem.type)
+            if type == .ghostMode {
+                AyuSettings.shared.toggleGhostMode()
+                completionHandler(true)
+                return
+            }
             let immediately = type == .account
             let proceed: () -> Void = {
                 let _ = (self.context.get()
@@ -2776,6 +2788,8 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                                     context.switchAccount()
                                 case .appIcon:
                                     context.openAppIcon()
+                                case .ghostMode:
+                                    break
                             }
                         }
                     }
