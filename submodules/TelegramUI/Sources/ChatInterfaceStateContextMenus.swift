@@ -1347,13 +1347,9 @@ func contextMenuForChatPresentationInterfaceState(chatPresentationInterfaceState
                     var text = ""
                     for (index, revision) in ayuRevisions.enumerated() {
                         let date = formatter.string(from: Date(timeIntervalSince1970: TimeInterval(revision.archivedTimestamp)))
-                        text += "Версия \(index + 1) · до \(date)
-\(revision.text.isEmpty ? "(без текста)" : revision.text)
-
-"
+                        text += "Версия \(index + 1) · до \(date)\n\(revision.text.isEmpty ? "(без текста)" : revision.text)\n\n"
                     }
-                    text += "Сейчас:
-\(message.text)"
+                    text += "Сейчас:\n\(message.text)"
                     controllerInteraction.presentController(textAlertController(
                         context: context,
                         title: "История правок",
