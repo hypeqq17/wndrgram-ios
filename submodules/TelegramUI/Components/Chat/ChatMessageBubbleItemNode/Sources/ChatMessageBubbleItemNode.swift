@@ -1,4 +1,5 @@
 import Foundation
+import AyuSettings
 import UIKit
 import AsyncDisplayKit
 import Display
@@ -395,6 +396,11 @@ private func contentNodeMessagesAndClassesForItem(_ item: ChatMessageItem) -> ([
                         }
                     }
                     
+                    // WndrGram: optionally drop link preview cards (story
+                    // shares keep theirs, they have no other content).
+                    if AyuSettings.current.hideLinkPreviews && content.story == nil {
+                        break inner
+                    }
                     if let attribute = message.attributes.first(where: { $0 is WebpagePreviewMessageAttribute }) as? WebpagePreviewMessageAttribute, attribute.leadingPreview {
                         result.insert((message, ChatMessageWebpageBubbleContentNode.self, itemAttributes, BubbleItemAttributes(isAttachment: false, neighborType: .text, neighborSpacing: .default)), at: addedPriceInfo ? 1 : 0)
                     } else {
