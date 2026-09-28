@@ -801,6 +801,7 @@ public final class AyuMenuController: ViewController {
             ]),
             AyuMenuGroup(title: "Приватность", footer: "Режим стримера скрывает интерфейс на скриншотах и записи экрана.", rows: [
                 .toggle(title: "Размытие в переключателе приложений", subtitle: nil, get: { $0.privacyScreenInAppSwitcher }, set: { $0.privacyScreenInAppSwitcher = $1 }),
+                .toggle(title: "Скрыть свой номер", subtitle: "В профиле и настройках. В режиме стримера скрыт всегда", get: { $0.hideOwnPhoneNumber }, set: { $0.hideOwnPhoneNumber = $1 }),
                 .toggle(title: "Режим стримера", subtitle: nil, get: { $0.streamerMode }, set: { $0.streamerMode = $1 }),
                 .toggle(title: "Не читать чат из уведомления", subtitle: nil, get: { $0.keepUnreadOnNotificationOpen }, set: { $0.keepUnreadOnNotificationOpen = $1 })
             ]),
@@ -947,6 +948,7 @@ private let ayuMenuIcons: [String: (String, UInt32)] = [
     "Локальный Premium": ("star.fill", 0xAF52DE),
     "Размытие в переключателе приложений": ("rectangle.on.rectangle", 0x8E8E93),
     "Режим стримера": ("video.slash.fill", 0xFF3B30),
+    "Скрыть свой номер": ("phone.down.fill", 0x34C759),
     "Не читать чат из уведомления": ("bell.badge.fill", 0xFF9500),
     "Открыть архив сообщений": ("archivebox.fill", 0x5856D6),
     "Face ID для архива": ("faceid", 0x34C759),

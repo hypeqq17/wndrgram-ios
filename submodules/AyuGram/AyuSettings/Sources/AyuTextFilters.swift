@@ -23,3 +23,12 @@ public func ayuStripZalgo(_ text: String) -> String? {
     // A couple of stray marks is not zalgo; only rewrite real stacks.
     return removed >= 3 ? String(result) : nil
 }
+
+/// Whether the user's own phone number should be masked right now (own
+/// option, or streamer mode).
+public var ayuShouldHideOwnPhone: Bool {
+    let settings = AyuSettings.current
+    return settings.hideOwnPhoneNumber || settings.streamerMode
+}
+
+public let ayuHiddenPhoneText = "+•• ••• ••• •• ••"
