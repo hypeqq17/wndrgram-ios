@@ -482,6 +482,7 @@ public class GlassBackgroundView: UIView {
     private let contentContainer: ContentContainer
     
     private var innerBackgroundView: UIView?
+    private var ayuFlatView: UIView?
     
     public var contentView: UIView {
         if let nativeView = self.nativeView {
@@ -609,6 +610,17 @@ public class GlassBackgroundView: UIView {
         // WndrGram: optional custom tint for every glass surface.
         var tintColor = tintColor
         let ayuSettings = AyuSettings.current
+        // WndrGram: panel roundness.
+        var shape = shape
+        let ayuRoundness = CGFloat(ayuSettings.panelRoundness) / 100.0
+        if ayuRoundness != 1.0 {
+            switch shape {
+            case let .roundedRect(cornerRadius):
+                shape = .roundedRect(cornerRadius: cornerRadius * ayuRoundness)
+            case let .customRoundedRect(cornerRadii):
+                shape = .customRoundedRect(cornerRadii: CornerRadii(topLeft: cornerRadii.topLeft * ayuRoundness, topRight: cornerRadii.topRight * ayuRoundness, bottomLeft: cornerRadii.bottomLeft * ayuRoundness, bottomRight: cornerRadii.bottomRight * ayuRoundness))
+            }
+        }
         if ayuSettings.glassTintEnabled {
             let rgb = UInt32(bitPattern: ayuSettings.glassTintColor)
             let color = UIColor(rgb: rgb).withAlphaComponent(CGFloat(ayuSettings.glassTintAlpha) / 100.0)
@@ -697,6 +709,41 @@ public class GlassBackgroundView: UIView {
             transition.setScale(view: innerBackgroundView, scale: 0.001)
             
             innerBackgroundView.removeFromSuperview()
+        }
+
+        // WndrGram: classic flat panels. An opaque plate sits under the
+        // content and covers the glass.
+        if ayuSettings.flatPanels {
+            let flatView: UIView
+            if let current = self.ayuFlatView {
+                flatView = current
+            } else {
+                flatView = UIView()
+                flatView.isUserInteractionEnabled = false
+                if #available(iOS 13.0, *) {
+                    flatView.layer.cornerCurve = .continuous
+                }
+                self.ayuFlatView = flatView
+            }
+            if flatView.superview !== self.contentView {
+                self.contentView.insertSubview(flatView, at: 0)
+            } else {
+                self.contentView.sendSubviewToBack(flatView)
+            }
+            let baseColor: UIColor
+            if ayuSettings.glassTintEnabled {
+                baseColor = UIColor(rgb: UInt32(bitPattern: ayuSettings.glassTintColor))
+            } else {
+                baseColor = isDark ? UIColor(rgb: 0x1C1C1E) : UIColor(rgb: 0xF9F9F9)
+            }
+            flatView.backgroundColor = baseColor.withAlphaComponent(CGFloat(ayuSettings.flatPanelsAlpha) / 100.0)
+            let radii = shape.cornerRadii(for: size)
+            transition.setFrame(view: flatView, frame: CGRect(origin: CGPoint(), size: size))
+            transition.setCornerRadius(layer: flatView.layer, cornerRadius: min(radii.topLeft, radii.bottomLeft))
+            flatView.alpha = isVisible ? 1.0 : 0.0
+        } else if let flatView = self.ayuFlatView {
+            self.ayuFlatView = nil
+            flatView.removeFromSuperview()
         }
         
         let params = Params(shape: shape, isDark: isDark, tintColor: tintColor, isInteractive: isInteractive, isVisible: isVisible)

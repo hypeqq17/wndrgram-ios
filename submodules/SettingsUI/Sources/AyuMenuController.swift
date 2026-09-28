@@ -753,9 +753,15 @@ public final class AyuMenuController: ViewController {
                 .toggle(title: "Классические панели (без стекла)", subtitle: "Старый стиль верхних панелей", get: { $0.classicNavigationBars }, set: { $0.classicNavigationBars = $1 }),
                 .toggle(title: "Своя подсветка стекла", subtitle: nil, get: { $0.glassTintEnabled }, set: { $0.glassTintEnabled = $1 }),
                 .color(title: "Цвет стекла", get: { $0.glassTintColor }, set: { $0.glassTintColor = $1 }),
+                .toggle(title: "Плоские панели (без стекла)", subtitle: "Шапка, поле ввода, вкладки и кнопки — сплошной фон", get: { $0.flatPanels }, set: { $0.flatPanels = $1 }),
+                .slider(title: "Непрозрачность панелей", range: 0 ... 100, step: 5, format: { "\(Int($0))%" }, get: { Float($0.flatPanelsAlpha) }, set: { $0.flatPanelsAlpha = Int32($1) }),
+                .slider(title: "Скругление панелей", range: 0 ... 100, step: 5, format: { "\(Int($0))%" }, get: { Float($0.panelRoundness) }, set: { $0.panelRoundness = Int32($1) }),
                 .slider(title: "Насыщенность стекла", range: 0 ... 100, step: 5, format: { "\(Int($0))%" }, get: { Float($0.glassTintAlpha) }, set: { $0.glassTintAlpha = Int32($1) })
             ]),
             AyuMenuGroup(title: "Внешний вид", footer: nil, rows: [
+                .button(title: "Палитра — все цвета приложения", destructive: false, action: { [weak self] in
+                    self?.pushController(AyuPaletteController(context: context))
+                }),
                 .button(title: "Оформление и темы", destructive: false, action: { [weak self] in
                     self?.pushController(themeSettingsController(context: context))
                 }),
@@ -936,6 +942,10 @@ private let ayuMenuIcons: [String: (String, UInt32)] = [
     "Скрыть превью ссылок": ("link.badge.plus", 0x30B0C7),
     "Пересылать без автора": ("arrowshape.turn.up.right.fill", 0x34C759),
     "Реакция двойным тапом": ("hand.tap.fill", 0xFF2D55),
+    "Плоские панели (без стекла)": ("rectangle.fill", 0x8E8E93),
+    "Непрозрачность панелей": ("circle.lefthalf.fill", 0x8E8E93),
+    "Скругление панелей": ("app", 0x5856D6),
+    "Палитра — все цвета приложения": ("paintpalette.fill", 0xFF2D55),
     "Цвет стекла": ("paintpalette.fill", 0xAF52DE),
     "Насыщенность стекла": ("circle.lefthalf.filled", 0x5856D6),
     "Расшифровка голосовых без Premium": ("waveform", 0xFF9500),

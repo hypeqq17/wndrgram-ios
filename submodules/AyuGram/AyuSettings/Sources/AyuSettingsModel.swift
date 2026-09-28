@@ -103,6 +103,14 @@ public struct AyuSettingsData: Codable, Equatable {
     public var forwardHideNamesByDefault: Bool = false
     /// Double tap on a message puts the quick reaction.
     public var doubleTapReaction: Bool = true
+    /// Palette editor: theme colour path -> "aarrggbb".
+    public var themeOverrides: [String: String] = [:]
+    /// Flat, opaque panels instead of Liquid Glass.
+    public var flatPanels: Bool = false
+    /// Opacity of flat panels, in percent.
+    public var flatPanelsAlpha: Int32 = 92
+    /// Corner radius of glass/flat panels, in percent of the default.
+    public var panelRoundness: Int32 = 100
     /// Hide link preview cards under messages.
     public var hideLinkPreviews: Bool = false
     /// Tint every Liquid Glass surface with a custom colour.
@@ -209,6 +217,10 @@ public struct AyuSettingsData: Codable, Equatable {
         self.hidePremiumBadges = b(.hidePremiumBadges, d.hidePremiumBadges)
         self.forwardHideNamesByDefault = b(.forwardHideNamesByDefault, d.forwardHideNamesByDefault)
         self.doubleTapReaction = b(.doubleTapReaction, d.doubleTapReaction)
+        self.themeOverrides = ((try? c.decodeIfPresent([String: String].self, forKey: .themeOverrides)) ?? nil) ?? d.themeOverrides
+        self.flatPanels = b(.flatPanels, d.flatPanels)
+        self.flatPanelsAlpha = max(0, min(100, i(.flatPanelsAlpha, d.flatPanelsAlpha)))
+        self.panelRoundness = max(0, min(100, i(.panelRoundness, d.panelRoundness)))
         self.hideLinkPreviews = b(.hideLinkPreviews, d.hideLinkPreviews)
         self.glassTintEnabled = b(.glassTintEnabled, d.glassTintEnabled)
         self.glassTintColor = i(.glassTintColor, d.glassTintColor)

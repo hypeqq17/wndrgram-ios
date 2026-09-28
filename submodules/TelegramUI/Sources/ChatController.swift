@@ -6044,6 +6044,9 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                                     }
                                     strongSelf.push(context.sharedContext.makeChatRecentActionsController(context: context, peer: EnginePeer(peer), adminPeerId: nil, starsState: nil))
                                 })))
+                            }
+                            // The admin list is public in groups, so show it to everyone.
+                            if isAdmin || isGroup {
                                 items.append(.action(ContextMenuActionItem(text: "Администраторы", icon: { theme in
                                     return generateTintedImage(image: UIImage(systemName: "shield.lefthalf.filled"), color: theme.actionSheet.primaryTextColor)
                                 }, action: { _, f in
