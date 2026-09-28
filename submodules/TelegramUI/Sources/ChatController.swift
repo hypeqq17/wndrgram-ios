@@ -6026,6 +6026,40 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                             f(.dismissWithoutContent)
                             self?.interfaceInteraction?.beginMessageSearch(.everything, "")
                         })))
+
+                        // WndrGram: AyuGram-style admin shortcuts.
+                        if let channel = peer as? TelegramChannel {
+                            let isAdmin = channel.flags.contains(.isCreator) || channel.adminRights != nil
+                            var isGroup = false
+                            if case .group = channel.info {
+                                isGroup = true
+                            }
+                            if isAdmin {
+                                items.append(.action(ContextMenuActionItem(text: "Недавние действия", icon: { theme in
+                                    return generateTintedImage(image: UIImage(systemName: "list.bullet.rectangle"), color: theme.actionSheet.primaryTextColor)
+                                }, action: { _, f in
+                                    f(.dismissWithoutContent)
+                                    guard let strongSelf = self, let peer = strongSelf.presentationInterfaceState.renderedPeer?.chatMainPeer else {
+                                        return
+                                    }
+                                    strongSelf.push(context.sharedContext.makeChatRecentActionsController(context: context, peer: EnginePeer(peer), adminPeerId: nil, starsState: nil))
+                                })))
+                                items.append(.action(ContextMenuActionItem(text: "Администраторы", icon: { theme in
+                                    return generateTintedImage(image: UIImage(systemName: "shield.lefthalf.filled"), color: theme.actionSheet.primaryTextColor)
+                                }, action: { _, f in
+                                    f(.dismissWithoutContent)
+                                    self?.push(channelAdminsController(context: context, peerId: channel.id))
+                                })))
+                            }
+                            if isGroup {
+                                items.append(.action(ContextMenuActionItem(text: "Участники", icon: { theme in
+                                    return generateTintedImage(image: UIImage(systemName: "person.2.fill"), color: theme.actionSheet.primaryTextColor)
+                                }, action: { _, f in
+                                    f(.dismissWithoutContent)
+                                    self?.push(channelMembersController(context: context, peerId: channel.id))
+                                })))
+                            }
+                        }
                                                 
                         return items
                     }
