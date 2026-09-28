@@ -93,6 +93,8 @@ public struct AyuSettingsData: Codable, Equatable {
     public var classicNavigationBars: Bool = false
     /// Hide your own phone number in your profile and settings.
     public var hideOwnPhoneNumber: Bool = false
+    /// 2.5x and 3x playback speeds for voice and round messages.
+    public var extendedPlaybackSpeeds: Bool = true
     /// Tint every Liquid Glass surface with a custom colour.
     public var glassTintEnabled: Bool = false
     public var glassTintColor: Int32 = 0x8B5CF6
@@ -192,6 +194,7 @@ public struct AyuSettingsData: Codable, Equatable {
         self.localTranslation = b(.localTranslation, d.localTranslation)
         self.classicNavigationBars = b(.classicNavigationBars, d.classicNavigationBars)
         self.hideOwnPhoneNumber = b(.hideOwnPhoneNumber, d.hideOwnPhoneNumber)
+        self.extendedPlaybackSpeeds = b(.extendedPlaybackSpeeds, d.extendedPlaybackSpeeds)
         self.glassTintEnabled = b(.glassTintEnabled, d.glassTintEnabled)
         self.glassTintColor = i(.glassTintColor, d.glassTintColor)
         self.glassTintAlpha = max(0, min(100, i(.glassTintAlpha, d.glassTintAlpha)))

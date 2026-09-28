@@ -1,4 +1,5 @@
 import Foundation
+import AyuSettings
 import UIKit
 import AsyncDisplayKit
 import Display
@@ -504,6 +505,8 @@ public final class MediaNavigationAccessoryHeaderNode: ASDisplayNode, ASScrollVi
         let nextRate: AudioPlaybackRate
         if let rate = self.playbackBaseRate {
             switch rate {
+            case .x2 where AyuSettings.current.extendedPlaybackSpeeds:
+                nextRate = AudioPlaybackRate(3.0)
             case .x0_5, .x2:
                 nextRate = .x1
             case .x1:
@@ -549,7 +552,10 @@ public final class MediaNavigationAccessoryHeaderNode: ASDisplayNode, ASScrollVi
             (strings.PlaybackSpeed_Normal, "1x", .x1),
             ("1.5x", "1.5x", .x1_5),
             ("2x", "2x", .x2)
-        ]
+        ] + (AyuSettings.current.extendedPlaybackSpeeds ? [
+            ("2.5x", "2.5x", AudioPlaybackRate(2.5)),
+            ("3x", "3x", AudioPlaybackRate(3.0))
+        ] : [])
         return speedList
     }
     
@@ -559,7 +565,7 @@ public final class MediaNavigationAccessoryHeaderNode: ASDisplayNode, ASScrollVi
         let previousRate = self.playbackBaseRate
         let previousValue = self.playbackBaseRate?.doubleValue ?? 1.0
         let sliderValuePromise = ValuePromise<Double?>(nil)
-        let sliderItem: ContextMenuItem = .custom(SliderContextItem(minValue: 0.2, maxValue: 2.5, value: previousValue, valueChanged: { [weak self] newValue, finished in
+        let sliderItem: ContextMenuItem = .custom(SliderContextItem(minValue: 0.2, maxValue: AyuSettings.current.extendedPlaybackSpeeds ? 3.0 : 2.5, value: previousValue, valueChanged: { [weak self] newValue, finished in
             let newValue = normalizeValue(newValue)
             self?.setRate?(AudioPlaybackRate(newValue), .sliderChange)
             sliderValuePromise.set(newValue)
