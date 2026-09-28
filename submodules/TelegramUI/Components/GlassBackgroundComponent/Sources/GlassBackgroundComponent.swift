@@ -1,4 +1,5 @@
 import Foundation
+import AyuSettings
 import UIKit
 import Display
 import ComponentFlow
@@ -605,6 +606,14 @@ public class GlassBackgroundView: UIView {
     }
 
     func update(size: CGSize, shape: Shape, isDark: Bool, tintColor: TintColor, isInteractive: Bool = false, isVisible: Bool = true, transition: ComponentTransition) {
+        // WndrGram: optional custom tint for every glass surface.
+        var tintColor = tintColor
+        let ayuSettings = AyuSettings.current
+        if ayuSettings.glassTintEnabled {
+            let rgb = UInt32(bitPattern: ayuSettings.glassTintColor)
+            let color = UIColor(rgb: rgb).withAlphaComponent(CGFloat(ayuSettings.glassTintAlpha) / 100.0)
+            tintColor = TintColor(kind: .custom(style: .default, color: color), innerColor: tintColor.innerColor, innerInset: tintColor.innerInset)
+        }
         
         if let glassHighlightRecognizer = self.glassHighlightRecognizer {
             glassHighlightRecognizer.isEnabled = isInteractive

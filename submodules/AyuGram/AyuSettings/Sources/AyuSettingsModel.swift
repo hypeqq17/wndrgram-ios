@@ -89,6 +89,13 @@ public struct AyuSettingsData: Codable, Equatable {
     public var localVoiceTranscription: Bool = true
     /// Translate chats with Apple's on-device translator (iOS 18+).
     public var localTranslation: Bool = true
+    /// Old-style (non-glass) navigation bars.
+    public var classicNavigationBars: Bool = false
+    /// Tint every Liquid Glass surface with a custom colour.
+    public var glassTintEnabled: Bool = false
+    public var glassTintColor: Int32 = 0x8B5CF6
+    /// Strength of the glass tint, in percent.
+    public var glassTintAlpha: Int32 = 35
     /// Extra entries in the message context menu.
     public var showRepeatInContextMenu: Bool = true
     public var showDetailsInContextMenu: Bool = true
@@ -181,6 +188,10 @@ public struct AyuSettingsData: Codable, Equatable {
         self.showTimeOnEveryMessage = b(.showTimeOnEveryMessage, d.showTimeOnEveryMessage)
         self.localVoiceTranscription = b(.localVoiceTranscription, d.localVoiceTranscription)
         self.localTranslation = b(.localTranslation, d.localTranslation)
+        self.classicNavigationBars = b(.classicNavigationBars, d.classicNavigationBars)
+        self.glassTintEnabled = b(.glassTintEnabled, d.glassTintEnabled)
+        self.glassTintColor = i(.glassTintColor, d.glassTintColor)
+        self.glassTintAlpha = max(0, min(100, i(.glassTintAlpha, d.glassTintAlpha)))
         self.showRepeatInContextMenu = b(.showRepeatInContextMenu, d.showRepeatInContextMenu)
         self.showDetailsInContextMenu = b(.showDetailsInContextMenu, d.showDetailsInContextMenu)
 

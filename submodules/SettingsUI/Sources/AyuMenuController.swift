@@ -50,6 +50,7 @@ private enum AyuMenuRow {
     case segmented(title: String, options: [String], get: (AyuSettingsData) -> Int, set: (inout AyuSettingsData, Int) -> Void)
     case text(title: String, placeholder: String, get: (AyuSettingsData) -> String, set: (inout AyuSettingsData, String) -> Void)
     case info(title: String, value: () -> String)
+    case color(title: String, get: (AyuSettingsData) -> Int32, set: (inout AyuSettingsData, Int32) -> Void)
     case button(title: String, destructive: Bool, action: () -> Void)
 }
 
@@ -542,6 +543,57 @@ public final class AyuMenuController: ViewController {
             }
             return self.padded(stack)
 
+        case let .color(title, get, set):
+            let presets: [Int32] = [0x8B5CF6, 0x007AFF, 0x34C759, 0xFF3B30, 0xFF9500, 0xFF2D55, 0x30B0C7, 0xFFD60A, 0xFFFFFF, 0x000000]
+            let swatches = UIStackView()
+            swatches.spacing = 6.0
+            swatches.distribution = .fillEqually
+            var buttons: [(UIButton, Int32)] = []
+            for preset in presets {
+                let button = UIButton(type: .custom)
+                button.backgroundColor = UIColor(rgb: UInt32(bitPattern: preset))
+                button.layer.cornerRadius = 13.0
+                button.layer.borderColor = palette.separator.cgColor
+                button.layer.borderWidth = 1.0
+                button.heightAnchor.constraint(equalToConstant: 26.0).isActive = true
+                button.ayuOn(.touchUpInside) {
+                    ayuMenuHaptic.tap()
+                    AyuSettings.shared.update { settings in
+                        set(&settings, preset)
+                    }
+                }
+                swatches.addArrangedSubview(button)
+                buttons.append((button, preset))
+            }
+            let stack = UIStackView(arrangedSubviews: [self.makeTitleLabel(title, palette: palette), swatches])
+            stack.axis = .vertical
+            stack.spacing = 10.0
+            if #available(iOS 14.0, *) {
+                let well = UIColorWell()
+                well.supportsAlpha = false
+                well.addTarget(self, action: #selector(self.ayuColorWellChanged(_:)), for: .valueChanged)
+                self.colorWellSetters[ObjectIdentifier(well)] = { value in
+                    AyuSettings.shared.update { settings in
+                        set(&settings, value)
+                    }
+                }
+                let customRow = UIStackView(arrangedSubviews: [self.makeTitleLabel("Свой цвет", palette: palette), well])
+                customRow.spacing = 12.0
+                customRow.alignment = .center
+                stack.addArrangedSubview(customRow)
+                self.refreshers.append { settings in
+                    well.selectedColor = UIColor(rgb: UInt32(bitPattern: get(settings)))
+                }
+            }
+            self.refreshers.append { settings in
+                let current = get(settings)
+                for (button, preset) in buttons {
+                    button.layer.borderWidth = preset == current ? 3.0 : 1.0
+                    button.layer.borderColor = preset == current ? palette.accent.cgColor : palette.separator.cgColor
+                }
+            }
+            return self.padded(stack)
+
         case let .info(title, value):
             let valueLabel = UILabel()
             valueLabel.font = UIFont.systemFont(ofSize: 17.0)
@@ -632,6 +684,22 @@ public final class AyuMenuController: ViewController {
 
     // MARK: - Content
 
+    private var colorWellSetters: [ObjectIdentifier: (Int32) -> Void] = [:]
+
+    @available(iOS 14.0, *)
+    @objc private func ayuColorWellChanged(_ well: UIColorWell) {
+        guard let color = well.selectedColor, let setter = self.colorWellSetters[ObjectIdentifier(well)] else {
+            return
+        }
+        var r: CGFloat = 0.0
+        var g: CGFloat = 0.0
+        var b: CGFloat = 0.0
+        var a: CGFloat = 0.0
+        color.getRed(&r, green: &g, blue: &b, alpha: &a)
+        let value = (Int32(max(0.0, min(1.0, r)) * 255.0) << 16) | (Int32(max(0.0, min(1.0, g)) * 255.0) << 8) | Int32(max(0.0, min(1.0, b)) * 255.0)
+        setter(value)
+    }
+
     private func pushController(_ controller: ViewController) {
         (self.navigationController as? NavigationController)?.pushViewController(controller)
     }
@@ -677,6 +745,12 @@ public final class AyuMenuController: ViewController {
                 .toggle(title: "Значок карандаша у изменённых", subtitle: nil, get: { $0.showEditedIcon }, set: { $0.showEditedIcon = $1 }),
                 .text(title: "Метка удалённого", placeholder: "нет", get: { $0.deletedMark }, set: { $0.deletedMark = $1 }),
                 .text(title: "Метка изменённого", placeholder: "нет", get: { $0.editedMark }, set: { $0.editedMark = $1 })
+            ]),
+            AyuMenuGroup(title: "Дизайн", footer: "Подсветка применяется ко всем стеклянным элементам Liquid Glass. Классические панели и хвостики применяются после перезапуска.", rows: [
+                .toggle(title: "Классические панели (без стекла)", subtitle: "Старый стиль верхних панелей", get: { $0.classicNavigationBars }, set: { $0.classicNavigationBars = $1 }),
+                .toggle(title: "Своя подсветка стекла", subtitle: nil, get: { $0.glassTintEnabled }, set: { $0.glassTintEnabled = $1 }),
+                .color(title: "Цвет стекла", get: { $0.glassTintColor }, set: { $0.glassTintColor = $1 }),
+                .slider(title: "Насыщенность стекла", range: 0 ... 100, step: 5, format: { "\(Int($0))%" }, get: { Float($0.glassTintAlpha) }, set: { $0.glassTintAlpha = Int32($1) })
             ]),
             AyuMenuGroup(title: "Внешний вид", footer: nil, rows: [
                 .button(title: "Оформление и темы", destructive: false, action: { [weak self] in
@@ -847,6 +921,10 @@ private let ayuMenuIcons: [String: (String, UInt32)] = [
     "Метка изменённого": ("tag.fill", 0xFF9500),
     "Секунды во времени": ("stopwatch.fill", 0x30B0C7),
     "Время у каждого сообщения": ("clock.fill", 0x007AFF),
+    "Классические панели (без стекла)": ("rectangle.topthird.inset.filled", 0x8E8E93),
+    "Своя подсветка стекла": ("drop.fill", 0x5AC8FA),
+    "Цвет стекла": ("paintpalette.fill", 0xAF52DE),
+    "Насыщенность стекла": ("circle.lefthalf.filled", 0x5856D6),
     "Расшифровка голосовых без Premium": ("waveform", 0xFF9500),
     "Перевод чатов на устройстве": ("character.bubble.fill", 0x007AFF),
     "Скругление пузырей": ("bubble.left.fill", 0x007AFF),

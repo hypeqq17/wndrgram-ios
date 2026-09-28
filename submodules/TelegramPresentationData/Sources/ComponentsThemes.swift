@@ -1,4 +1,5 @@
 import Foundation
+import AyuSettings
 import UIKit
 import Display
 import TelegramUIPreferences
@@ -81,15 +82,15 @@ public extension NavigationBarStrings {
 
 public extension NavigationBarPresentationData {
     convenience init(presentationData: PresentationData, style: NavigationBar.Style = .legacy, glassStyle: NavigationBar.GlassStyle = .default) {
-        self.init(theme: NavigationBarTheme(rootControllerTheme: presentationData.theme, style: style, glassStyle: glassStyle), strings: NavigationBarStrings(presentationStrings: presentationData.strings))
+        self.init(theme: NavigationBarTheme(rootControllerTheme: presentationData.theme, style: AyuSettings.current.classicNavigationBars ? .legacy : style, glassStyle: glassStyle), strings: NavigationBarStrings(presentationStrings: presentationData.strings))
     }
     
     convenience init(presentationData: PresentationData, hideBackground: Bool, hideBadge: Bool, hideSeparator: Bool = false, style: NavigationBar.Style = .legacy, glassStyle: NavigationBar.GlassStyle = .default, edgeEffectColor: UIColor? = nil) {
-        self.init(theme: NavigationBarTheme(rootControllerTheme: presentationData.theme, hideBackground: hideBackground, hideBadge: hideBadge, hideSeparator: hideSeparator, edgeEffectColor: hideBackground ? .clear : edgeEffectColor, style: style, glassStyle: glassStyle), strings: NavigationBarStrings(presentationStrings: presentationData.strings))
+        self.init(theme: NavigationBarTheme(rootControllerTheme: presentationData.theme, hideBackground: hideBackground, hideBadge: hideBadge, hideSeparator: hideSeparator, edgeEffectColor: hideBackground ? .clear : edgeEffectColor, style: AyuSettings.current.classicNavigationBars ? .legacy : style, glassStyle: glassStyle), strings: NavigationBarStrings(presentationStrings: presentationData.strings))
     }
     
     convenience init(presentationTheme: PresentationTheme, presentationStrings: PresentationStrings, style: NavigationBar.Style = .legacy, glassStyle: NavigationBar.GlassStyle = .default) {
-        self.init(theme: NavigationBarTheme(rootControllerTheme: presentationTheme, style: style, glassStyle: glassStyle), strings: NavigationBarStrings(presentationStrings: presentationStrings))
+        self.init(theme: NavigationBarTheme(rootControllerTheme: presentationTheme, style: AyuSettings.current.classicNavigationBars ? .legacy : style, glassStyle: glassStyle), strings: NavigationBarStrings(presentationStrings: presentationStrings))
     }
 }
 
