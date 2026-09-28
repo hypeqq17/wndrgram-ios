@@ -99,6 +99,8 @@ public struct AyuSettingsData: Codable, Equatable {
     public var animationSpeed: Int32 = 100
     /// Hide the Premium star next to other people's names.
     public var hidePremiumBadges: Bool = false
+    /// Forward without the original author by default.
+    public var forwardHideNamesByDefault: Bool = false
     /// Hide link preview cards under messages.
     public var hideLinkPreviews: Bool = false
     /// Tint every Liquid Glass surface with a custom colour.
@@ -203,6 +205,7 @@ public struct AyuSettingsData: Codable, Equatable {
         self.extendedPlaybackSpeeds = b(.extendedPlaybackSpeeds, d.extendedPlaybackSpeeds)
         self.animationSpeed = max(25, min(300, i(.animationSpeed, d.animationSpeed)))
         self.hidePremiumBadges = b(.hidePremiumBadges, d.hidePremiumBadges)
+        self.forwardHideNamesByDefault = b(.forwardHideNamesByDefault, d.forwardHideNamesByDefault)
         self.hideLinkPreviews = b(.hideLinkPreviews, d.hideLinkPreviews)
         self.glassTintEnabled = b(.glassTintEnabled, d.glassTintEnabled)
         self.glassTintColor = i(.glassTintColor, d.glassTintColor)
