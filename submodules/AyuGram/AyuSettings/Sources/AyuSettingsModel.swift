@@ -84,6 +84,9 @@ public struct AyuSettingsData: Codable, Equatable {
     /// Time (and the trash / pencil icon) on every message, not only on the
     /// last one of a series.
     public var showTimeOnEveryMessage: Bool = true
+    /// Transcribe voice messages on the device (Apple speech recognition),
+    /// free and without Premium.
+    public var localVoiceTranscription: Bool = true
     /// Extra entries in the message context menu.
     public var showRepeatInContextMenu: Bool = true
     public var showDetailsInContextMenu: Bool = true
@@ -174,6 +177,7 @@ public struct AyuSettingsData: Codable, Equatable {
         self.showGroupReactions = b(.showGroupReactions, d.showGroupReactions)
         self.showPrivateReactions = b(.showPrivateReactions, d.showPrivateReactions)
         self.showTimeOnEveryMessage = b(.showTimeOnEveryMessage, d.showTimeOnEveryMessage)
+        self.localVoiceTranscription = b(.localVoiceTranscription, d.localVoiceTranscription)
         self.showRepeatInContextMenu = b(.showRepeatInContextMenu, d.showRepeatInContextMenu)
         self.showDetailsInContextMenu = b(.showDetailsInContextMenu, d.showDetailsInContextMenu)
 
