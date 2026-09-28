@@ -87,6 +87,8 @@ public struct AyuSettingsData: Codable, Equatable {
     /// Transcribe voice messages on the device (Apple speech recognition),
     /// free and without Premium.
     public var localVoiceTranscription: Bool = true
+    /// Translate chats with Apple's on-device translator (iOS 18+).
+    public var localTranslation: Bool = true
     /// Extra entries in the message context menu.
     public var showRepeatInContextMenu: Bool = true
     public var showDetailsInContextMenu: Bool = true
@@ -178,6 +180,7 @@ public struct AyuSettingsData: Codable, Equatable {
         self.showPrivateReactions = b(.showPrivateReactions, d.showPrivateReactions)
         self.showTimeOnEveryMessage = b(.showTimeOnEveryMessage, d.showTimeOnEveryMessage)
         self.localVoiceTranscription = b(.localVoiceTranscription, d.localVoiceTranscription)
+        self.localTranslation = b(.localTranslation, d.localTranslation)
         self.showRepeatInContextMenu = b(.showRepeatInContextMenu, d.showRepeatInContextMenu)
         self.showDetailsInContextMenu = b(.showDetailsInContextMenu, d.showDetailsInContextMenu)
 
