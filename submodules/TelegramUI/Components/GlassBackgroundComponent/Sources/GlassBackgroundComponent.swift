@@ -483,22 +483,6 @@ public class GlassBackgroundView: UIView {
     
     private var innerBackgroundView: UIView?
     private var ayuFlatView: UIView?
-    private var ayuLastInput: AyuGlassInput?
-    private var ayuObserver: NSObjectProtocol?
-    private var ayuLookKey: String = ""
-
-    deinit {
-        if let ayuObserver = self.ayuObserver {
-            NotificationCenter.default.removeObserver(ayuObserver)
-        }
-    }
-
-    private func ayuSettingsChanged() {
-        guard let input = self.ayuLastInput, ayuGlassLookKey(AyuSettings.current) != self.ayuLookKey else {
-            return
-        }
-        self.update(size: input.size, shape: input.shape, isDark: input.isDark, tintColor: input.tintColor, isInteractive: input.isInteractive, isVisible: input.isVisible, transition: .immediate)
-    }
     
     public var contentView: UIView {
         if let nativeView = self.nativeView {
@@ -623,16 +607,9 @@ public class GlassBackgroundView: UIView {
     }
 
     func update(size: CGSize, shape: Shape, isDark: Bool, tintColor: TintColor, isInteractive: Bool = false, isVisible: Bool = true, transition: ComponentTransition) {
-        self.ayuLastInput = AyuGlassInput(size: size, shape: shape, isDark: isDark, tintColor: tintColor, isInteractive: isInteractive, isVisible: isVisible)
-        if self.ayuObserver == nil {
-            self.ayuObserver = NotificationCenter.default.addObserver(forName: AyuSettings.didChangeNotification, object: nil, queue: .main, using: { [weak self] _ in
-                self?.ayuSettingsChanged()
-            })
-        }
         // WndrGram: optional custom tint for every glass surface.
         var tintColor = tintColor
         let ayuSettings = AyuSettings.current
-        self.ayuLookKey = ayuGlassLookKey(ayuSettings)
         // WndrGram: panel roundness.
         var shape = shape
         let ayuRoundness = CGFloat(ayuSettings.panelRoundness) / 100.0
@@ -1833,17 +1810,4 @@ public final class GlassContextExtractableContainer: UIView, ContextExtractableC
             }
         }
     }
-}
-
-private struct AyuGlassInput {
-    let size: CGSize
-    let shape: GlassBackgroundView.Shape
-    let isDark: Bool
-    let tintColor: GlassBackgroundView.TintColor
-    let isInteractive: Bool
-    let isVisible: Bool
-}
-
-private func ayuGlassLookKey(_ s: AyuSettingsData) -> String {
-    return "\(s.flatPanels)|\(s.flatPanelsAlpha)|\(s.panelRoundness)|\(s.glassTintEnabled)|\(s.glassTintColor)|\(s.glassTintAlpha)"
 }
