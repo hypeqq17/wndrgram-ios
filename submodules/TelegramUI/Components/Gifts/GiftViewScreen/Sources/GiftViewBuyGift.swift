@@ -1,4 +1,5 @@
 import Foundation
+import AyuSettings
 import UIKit
 import Display
 import SwiftSignalKit
@@ -23,6 +24,15 @@ public func buyStarGiftImpl(
     completion: @escaping () -> Void
 ) {
     let presentationData = context.sharedContext.currentPresentationData.with { $0 }
+
+    // WndrGram skin changer: a collectible "bought" for yourself is added to
+    // your profile locally, for free. Nothing is sent to the server.
+    if AyuSettings.current.localGifts && recipientPeerId == context.account.peerId {
+        AyuLocalGifts.add(.unique(uniqueGift), text: nil)
+        HapticFeedback().success()
+        completion()
+        return
+    }
                     
     let action: (CurrencyAmount.Currency, @escaping () -> Void) -> Void = { currency, beforeCompletion in
         guard let resellAmount = uniqueGift.resellAmounts?.first(where: { $0.currency == currency }) else {

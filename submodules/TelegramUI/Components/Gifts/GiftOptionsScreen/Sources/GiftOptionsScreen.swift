@@ -1,4 +1,5 @@
 import Foundation
+import AyuSettings
 import UIKit
 import Display
 import AsyncDisplayKit
@@ -466,7 +467,8 @@ final class GiftOptionsScreenComponent: Component {
                             }
                         }))
                     } else {
-                        if let availability = gift.availability, availability.remains == 0 || gift.perUserLimit?.remains == 0 || component.peerId.namespace == Namespaces.Peer.CloudChannel {
+                        let ayuLocalGiftToSelf = AyuSettings.current.localGifts && component.peerId == component.context.account.peerId
+                        if let availability = gift.availability, availability.remains == 0 || gift.perUserLimit?.remains == 0 || component.peerId.namespace == Namespaces.Peer.CloudChannel, !(ayuLocalGiftToSelf && availability.resale == 0) {
                             if availability.resale > 0 {
                                 let storeController = component.context.sharedContext.makeGiftStoreController(
                                     context: component.context,
