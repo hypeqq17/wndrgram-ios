@@ -491,3 +491,38 @@ func ayuReactionsHidden(in message: Message) -> Bool {
         return !settings.showPrivateReactions
     }
 }
+
+/// WndrGram: explicitly send a read receipt for one chat, even with ghost
+/// mode on (AyuGram's "read" action). Everything up to the newest message is
+/// reported as read.
+public func ayuSendReadReceipt(account: Account, peerId: PeerId) -> Signal<Never, NoError> {
+    return account.postbox.transaction { transaction -> Peer? in
+        return transaction.getPeer(peerId)
+    }
+    |> mapToSignal { peer -> Signal<Never, NoError> in
+        guard let peer else {
+            return .complete()
+        }
+        if peerId.namespace == Namespaces.Peer.CloudChannel {
+            guard let inputChannel = apiInputChannel(peer) else {
+                return .complete()
+            }
+            return account.network.request(Api.functions.channels.readHistory(channel: inputChannel, maxId: Int32.max - 1))
+            |> `catch` { _ -> Signal<Api.Bool, NoError> in
+                return .complete()
+            }
+            |> ignoreValues
+        } else if peerId.namespace == Namespaces.Peer.CloudUser || peerId.namespace == Namespaces.Peer.CloudGroup {
+            guard let inputPeer = apiInputPeer(peer) else {
+                return .complete()
+            }
+            return account.network.request(Api.functions.messages.readHistory(peer: inputPeer, maxId: Int32.max - 1))
+            |> `catch` { _ -> Signal<Api.messages.AffectedMessages, NoError> in
+                return .complete()
+            }
+            |> ignoreValues
+        } else {
+            return .complete()
+        }
+    }
+}

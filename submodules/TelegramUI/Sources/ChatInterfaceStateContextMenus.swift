@@ -1365,6 +1365,14 @@ func contextMenuForChatPresentationInterfaceState(chatPresentationInterfaceState
                 })
             })))
         }
+        if !AyuSettings.current.sendReadMessages, message.id.namespace == Namespaces.Message.Cloud, message.id.peerId.namespace != Namespaces.Peer.SecretChat {
+            actions.append(.action(ContextMenuActionItem(text: "Прочитать (отправить)", icon: { theme in
+                return generateTintedImage(image: UIImage(systemName: "eye"), color: theme.actionSheet.primaryTextColor)
+            }, action: { _, f in
+                let _ = ayuSendReadReceipt(account: context.account, peerId: message.id.peerId).start()
+                f(.default)
+            })))
+        }
         if AyuSettings.current.showRepeatInContextMenu, message.id.namespace == Namespaces.Message.Cloud, !message.containsSecretMedia {
             actions.append(.action(ContextMenuActionItem(text: "Повторить", icon: { theme in
                 return generateTintedImage(image: UIImage(systemName: "arrow.2.squarepath"), color: theme.actionSheet.primaryTextColor)
