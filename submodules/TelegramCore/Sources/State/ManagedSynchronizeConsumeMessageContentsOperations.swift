@@ -1,4 +1,5 @@
 import Foundation
+import AyuSettings
 import Postbox
 import SwiftSignalKit
 import TelegramApi
@@ -110,6 +111,12 @@ func managedSynchronizeConsumeMessageContentOperations(postbox: Postbox, network
 }
 
 private func synchronizeConsumeMessageContents(transaction: Transaction, network: Network, stateManager: AccountStateManager, peerId: PeerId, operation: SynchronizeConsumeMessageContentsOperation) -> Signal<Void, NoError> {
+    // WndrGram ghost mode: "listened" / "watched" marks for voice and round
+    // messages are read receipts too. Report success so the operation is
+    // dropped instead of retried; the content is consumed locally.
+    if !AyuSettings.current.sendReadMessages {
+        return .complete()
+    }
     if peerId.namespace == Namespaces.Peer.CloudUser || peerId.namespace == Namespaces.Peer.CloudGroup {
         return network.request(Api.functions.messages.readMessageContents(id: operation.messageIds.map { $0.id }))
         |> map(Optional.init)
