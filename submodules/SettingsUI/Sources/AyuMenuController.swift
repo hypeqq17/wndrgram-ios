@@ -747,6 +747,9 @@ public final class AyuMenuController: ViewController {
                 .text(title: "Метка изменённого", placeholder: "нет", get: { $0.editedMark }, set: { $0.editedMark = $1 })
             ]),
             AyuMenuGroup(title: "Дизайн", footer: "Подсветка применяется ко всем стеклянным элементам Liquid Glass. Классические панели и хвостики применяются после перезапуска.", rows: [
+                .slider(title: "Скорость анимаций", range: 25 ... 300, step: 25, format: { value in
+                    return String(format: "%.2g×", Double(value) / 100.0)
+                }, get: { Float($0.animationSpeed) }, set: { $0.animationSpeed = Int32($1) }),
                 .toggle(title: "Классические панели (без стекла)", subtitle: "Старый стиль верхних панелей", get: { $0.classicNavigationBars }, set: { $0.classicNavigationBars = $1 }),
                 .toggle(title: "Своя подсветка стекла", subtitle: nil, get: { $0.glassTintEnabled }, set: { $0.glassTintEnabled = $1 }),
                 .color(title: "Цвет стекла", get: { $0.glassTintColor }, set: { $0.glassTintColor = $1 }),
@@ -774,6 +777,7 @@ public final class AyuMenuController: ViewController {
                 .toggle(title: "Без хвостиков у пузырей", subtitle: "Нужен перезапуск", get: { $0.removeMessageTail }, set: { $0.removeMessageTail = $1 }),
                 .toggle(title: "Раскрывать спойлеры", subtitle: "Текст и медиа под спойлером видны сразу", get: { $0.revealSpoilers }, set: { $0.revealSpoilers = $1 }),
                 .toggle(title: "Фильтр «залго»-текста", subtitle: "Убирает нагромождения символов в сообщениях", get: { $0.filterZalgo }, set: { $0.filterZalgo = $1 }),
+                .toggle(title: "Скрыть Premium-звёздочки", subtitle: "Значок Premium у других рядом с именем", get: { $0.hidePremiumBadges }, set: { $0.hidePremiumBadges = $1 }),
                 .toggle(title: "Скрыть премиум-статусы", subtitle: "Эмодзи-статусы у других рядом с именем", get: { $0.hidePremiumStatuses }, set: { $0.hidePremiumStatuses = $1 }),
                 .toggle(title: "Без чужих обоев в чатах", subtitle: "Обои, которые поставил собеседник", get: { $0.disableCustomBackgrounds }, set: { $0.disableCustomBackgrounds = $1 }),
                 .toggle(title: "Реакции в каналах", subtitle: nil, get: { $0.showChannelReactions }, set: { $0.showChannelReactions = $1 }),
@@ -925,6 +929,8 @@ private let ayuMenuIcons: [String: (String, UInt32)] = [
     "Время у каждого сообщения": ("clock.fill", 0x007AFF),
     "Классические панели (без стекла)": ("rectangle.topthird.inset.filled", 0x8E8E93),
     "Своя подсветка стекла": ("drop.fill", 0x5AC8FA),
+    "Скорость анимаций": ("speedometer", 0xFF9500),
+    "Скрыть Premium-звёздочки": ("star.circle", 0xAF52DE),
     "Цвет стекла": ("paintpalette.fill", 0xAF52DE),
     "Насыщенность стекла": ("circle.lefthalf.filled", 0x5856D6),
     "Расшифровка голосовых без Premium": ("waveform", 0xFF9500),

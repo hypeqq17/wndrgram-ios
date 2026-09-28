@@ -1,4 +1,5 @@
 import Foundation
+import AyuSettings
 import Postbox
 
 public let anonymousSavedMessagesId: Int64 = 2666000
@@ -227,7 +228,13 @@ public extension Peer {
     var isPremium: Bool {
         switch self {
         case let user as TelegramUser:
-            return user.flags.contains(.isPremium) || AyuLocalPremium.applies(to: user.id)
+            if AyuLocalPremium.applies(to: user.id) {
+                return true
+            }
+            if AyuSettings.current.hidePremiumBadges && !AyuLocalPremium.isAccountPeer(user.id) {
+                return false
+            }
+            return user.flags.contains(.isPremium)
         default:
             return false
         }

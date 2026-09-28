@@ -60,6 +60,13 @@ final class AyuPrivacyShield {
     private func update() {
         let settings = self.currentSettings
 
+        if let window = self.window {
+            let speed = Float(settings.animationSpeed) / 100.0
+            if window.layer.speed != speed {
+                window.layer.speed = speed
+            }
+        }
+
         if let protectedView = self.protectedView, self.appliedCaptureProtection != settings.streamerMode {
             self.appliedCaptureProtection = settings.streamerMode
             setLayerDisableScreenshots(protectedView.layer, settings.streamerMode)
