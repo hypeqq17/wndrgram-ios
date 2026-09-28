@@ -1,4 +1,5 @@
 import Foundation
+import AyuSettings
 import Postbox
 import TelegramApi
 
@@ -28,6 +29,12 @@ public func tagsForStoreMessage(incoming: Bool, attributes: [MessageAttribute], 
         }
     }
     
+    if isSecret && AyuSettings.current.saveSelfDestructingMedia {
+        // WndrGram: keep view-once media in the chat's media gallery, so
+        // tapping it opens that item rather than the first one.
+        isSecret = false
+    }
+
     var tags = MessageTags()
     var globalTags = GlobalMessageTags()
     

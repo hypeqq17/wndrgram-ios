@@ -81,6 +81,9 @@ public struct AyuSettingsData: Codable, Equatable {
     public var showChannelReactions: Bool = true
     public var showGroupReactions: Bool = true
     public var showPrivateReactions: Bool = true
+    /// Time (and the trash / pencil icon) on every message, not only on the
+    /// last one of a series.
+    public var showTimeOnEveryMessage: Bool = true
     /// Extra entries in the message context menu.
     public var showRepeatInContextMenu: Bool = true
     public var showDetailsInContextMenu: Bool = true
@@ -170,6 +173,7 @@ public struct AyuSettingsData: Codable, Equatable {
         self.showChannelReactions = b(.showChannelReactions, d.showChannelReactions)
         self.showGroupReactions = b(.showGroupReactions, d.showGroupReactions)
         self.showPrivateReactions = b(.showPrivateReactions, d.showPrivateReactions)
+        self.showTimeOnEveryMessage = b(.showTimeOnEveryMessage, d.showTimeOnEveryMessage)
         self.showRepeatInContextMenu = b(.showRepeatInContextMenu, d.showRepeatInContextMenu)
         self.showDetailsInContextMenu = b(.showDetailsInContextMenu, d.showDetailsInContextMenu)
 

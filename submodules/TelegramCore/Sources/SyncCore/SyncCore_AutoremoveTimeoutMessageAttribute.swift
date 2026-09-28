@@ -1,4 +1,5 @@
 import Foundation
+import AyuSettings
 import Postbox
 
 public let viewOnceTimeout: Int32 = 0x7fffffff
@@ -137,6 +138,11 @@ public extension Message {
     }
     
     var containsSecretMedia: Bool {
+        // WndrGram: with "keep self-destructing media" on, view-once and timer
+        // media in cloud chats are treated as ordinary media.
+        if AyuSettings.current.saveSelfDestructingMedia && self.id.peerId.namespace != Namespaces.Peer.SecretChat {
+            return false
+        }
         guard let timeout = self.minAutoremoveOrClearTimeout else {
             return false
         }

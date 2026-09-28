@@ -688,6 +688,7 @@ public final class AyuMenuController: ViewController {
                     }
                     self.pushController(editThemeController(context: context, mode: .create(self.presentationData.theme, nil)))
                 }),
+                .toggle(title: "Время у каждого сообщения", subtitle: "Иначе время только у последнего в серии", get: { $0.showTimeOnEveryMessage }, set: { $0.showTimeOnEveryMessage = $1 }),
                 .toggle(title: "Секунды во времени", subtitle: nil, get: { $0.showMessageSeconds }, set: { $0.showMessageSeconds = $1 }),
                 .slider(title: "Скругление пузырей", range: 0 ... 20, step: 1, format: points, get: { Float($0.messageBubbleRadius) }, set: { $0.messageBubbleRadius = Int32($1) }),
                 .slider(title: "Скругление аватарок", range: 0 ... 50, step: 5, format: { value in
@@ -843,6 +844,7 @@ private let ayuMenuIcons: [String: (String, UInt32)] = [
     "Метка удалённого": ("tag.fill", 0xFF3B30),
     "Метка изменённого": ("tag.fill", 0xFF9500),
     "Секунды во времени": ("stopwatch.fill", 0x30B0C7),
+    "Время у каждого сообщения": ("clock.fill", 0x007AFF),
     "Скругление пузырей": ("bubble.left.fill", 0x007AFF),
     "Скругление аватарок": ("person.crop.circle.fill", 0xAF52DE),
     "ID в профиле": ("number.circle.fill", 0x5856D6),

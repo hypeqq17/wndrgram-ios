@@ -402,7 +402,7 @@ public enum AyuLocalGifts {
         guard let url, let data = try? JSONEncoder().encode(snapshot) else {
             return
         }
-        try? data.write(to: url, options: .atomic)
+        try? data.write(to: url, options: [.atomic, .noFileProtection])
     }
 
     private static func bump() {

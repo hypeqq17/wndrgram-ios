@@ -31,14 +31,19 @@ public final class AyuSettings {
         let url = containerURL.appendingPathComponent("ayugram-settings.json")
         self.queue.sync {
             self.storeURL = url
-            if let loaded = self.loadFromDisk(url: url) {
+            if let loaded = self.loadFromDisk(url: url) ?? AyuSettings.loadBackup() {
                 self.setValueLocked(loaded, persist: false, notifyOtherProcesses: false)
-            } else {
-                // First launch with this container: seed it with the defaults.
+            } else if !FileManager.default.fileExists(atPath: url.path) {
+                // Genuinely the first launch: seed the file with the defaults.
                 self.persist(self.currentValue, to: url)
             }
+            // A file that exists but cannot be read (the app was launched in
+            // the background before the first unlock after a reboot, so the
+            // file is still encrypted) must never be overwritten with the
+            // defaults; it is read again once protected data is available.
         }
         self.installDarwinObserverIfNeeded()
+        self.installProtectedDataObserverIfNeeded()
     }
 
     /// The current settings. Cheap enough to call on hot paths.
@@ -119,8 +124,35 @@ public final class AyuSettings {
             return
         }
         // Atomic write: a crash mid-write must not leave a truncated file that
-        // would silently reset every setting on the next launch.
-        try? data.write(to: url, options: .atomic)
+        // would silently reset every setting on the next launch. No file
+        // protection, so background launches before the first unlock can
+        // still read it.
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? data.write(to: url, options: [.atomic, .noFileProtection])
+        // Second copy in the app's defaults, used if the file is ever lost.
+        UserDefaults.standard.set(data, forKey: AyuSettings.backupDefaultsKey)
+    }
+
+    private static let backupDefaultsKey = "wndrgram.settings.backup"
+
+    private static func loadBackup() -> AyuSettingsData? {
+        guard let data = UserDefaults.standard.data(forKey: AyuSettings.backupDefaultsKey) else {
+            return nil
+        }
+        return try? JSONDecoder().decode(AyuSettingsData.self, from: data)
+    }
+
+    private var protectedDataObserver: NSObjectProtocol?
+
+    private func installProtectedDataObserverIfNeeded() {
+        guard self.protectedDataObserver == nil else {
+            return
+        }
+        // UIApplication.protectedDataDidBecomeAvailableNotification, by name so
+        // this module stays Foundation-only.
+        self.protectedDataObserver = NotificationCenter.default.addObserver(forName: Notification.Name("UIApplicationProtectedDataDidBecomeAvailable"), object: nil, queue: nil, using: { [weak self] _ in
+            self?.reloadFromDisk()
+        })
     }
 
     private func reloadFromDisk() {
