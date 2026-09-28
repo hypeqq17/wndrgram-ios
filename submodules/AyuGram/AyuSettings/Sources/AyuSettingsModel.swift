@@ -101,6 +101,8 @@ public struct AyuSettingsData: Codable, Equatable {
     public var hidePremiumBadges: Bool = false
     /// Forward without the original author by default.
     public var forwardHideNamesByDefault: Bool = false
+    /// Double tap on a message puts the quick reaction.
+    public var doubleTapReaction: Bool = true
     /// Hide link preview cards under messages.
     public var hideLinkPreviews: Bool = false
     /// Tint every Liquid Glass surface with a custom colour.
@@ -206,6 +208,7 @@ public struct AyuSettingsData: Codable, Equatable {
         self.animationSpeed = max(25, min(300, i(.animationSpeed, d.animationSpeed)))
         self.hidePremiumBadges = b(.hidePremiumBadges, d.hidePremiumBadges)
         self.forwardHideNamesByDefault = b(.forwardHideNamesByDefault, d.forwardHideNamesByDefault)
+        self.doubleTapReaction = b(.doubleTapReaction, d.doubleTapReaction)
         self.hideLinkPreviews = b(.hideLinkPreviews, d.hideLinkPreviews)
         self.glassTintEnabled = b(.glassTintEnabled, d.glassTintEnabled)
         self.glassTintColor = i(.glassTintColor, d.glassTintColor)

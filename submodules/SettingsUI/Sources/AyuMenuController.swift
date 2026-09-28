@@ -778,6 +778,7 @@ public final class AyuMenuController: ViewController {
                 .toggle(title: "Раскрывать спойлеры", subtitle: "Текст и медиа под спойлером видны сразу", get: { $0.revealSpoilers }, set: { $0.revealSpoilers = $1 }),
                 .toggle(title: "Фильтр «залго»-текста", subtitle: "Убирает нагромождения символов в сообщениях", get: { $0.filterZalgo }, set: { $0.filterZalgo = $1 }),
                 .toggle(title: "Скрыть Premium-звёздочки", subtitle: "Значок Premium у других рядом с именем", get: { $0.hidePremiumBadges }, set: { $0.hidePremiumBadges = $1 }),
+                .toggle(title: "Реакция двойным тапом", subtitle: "Выключи, чтобы не ставить реакции случайно", get: { $0.doubleTapReaction }, set: { $0.doubleTapReaction = $1 }),
                 .toggle(title: "Пересылать без автора", subtitle: "По умолчанию скрывать имя отправителя", get: { $0.forwardHideNamesByDefault }, set: { $0.forwardHideNamesByDefault = $1 }),
                 .toggle(title: "Скрыть превью ссылок", subtitle: "Карточки сайтов под сообщениями", get: { $0.hideLinkPreviews }, set: { $0.hideLinkPreviews = $1 }),
                 .toggle(title: "Скрыть премиум-статусы", subtitle: "Эмодзи-статусы у других рядом с именем", get: { $0.hidePremiumStatuses }, set: { $0.hidePremiumStatuses = $1 }),
@@ -808,7 +809,6 @@ public final class AyuMenuController: ViewController {
             ]),
             AyuMenuGroup(title: "Приватность", footer: "Режим стримера скрывает интерфейс на скриншотах и записи экрана.", rows: [
                 .toggle(title: "Размытие в переключателе приложений", subtitle: nil, get: { $0.privacyScreenInAppSwitcher }, set: { $0.privacyScreenInAppSwitcher = $1 }),
-                .toggle(title: "Скрыть свой номер", subtitle: "В профиле и настройках. В режиме стримера скрыт всегда", get: { $0.hideOwnPhoneNumber }, set: { $0.hideOwnPhoneNumber = $1 }),
                 .toggle(title: "Режим стримера", subtitle: nil, get: { $0.streamerMode }, set: { $0.streamerMode = $1 }),
                 .toggle(title: "Не читать чат из уведомления", subtitle: nil, get: { $0.keepUnreadOnNotificationOpen }, set: { $0.keepUnreadOnNotificationOpen = $1 })
             ]),
@@ -935,6 +935,7 @@ private let ayuMenuIcons: [String: (String, UInt32)] = [
     "Скрыть Premium-звёздочки": ("star.circle", 0xAF52DE),
     "Скрыть превью ссылок": ("link.badge.plus", 0x30B0C7),
     "Пересылать без автора": ("arrowshape.turn.up.right.fill", 0x34C759),
+    "Реакция двойным тапом": ("hand.tap.fill", 0xFF2D55),
     "Цвет стекла": ("paintpalette.fill", 0xAF52DE),
     "Насыщенность стекла": ("circle.lefthalf.filled", 0x5856D6),
     "Расшифровка голосовых без Premium": ("waveform", 0xFF9500),

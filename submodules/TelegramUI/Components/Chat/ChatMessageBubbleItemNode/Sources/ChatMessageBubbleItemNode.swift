@@ -5748,7 +5748,7 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
                     case let .optionalAction(f):
                         f()
                     case let .openContextMenu(openContextMenu):
-                        if canAddMessageReactions(message: EngineMessage(openContextMenu.tapMessage)) {
+                        if AyuSettings.current.doubleTapReaction && canAddMessageReactions(message: EngineMessage(openContextMenu.tapMessage)) {
                             item.controllerInteraction.updateMessageReaction(openContextMenu.tapMessage, .default, false, nil)
                         } else {
                             item.controllerInteraction.openMessageContextMenu(openContextMenu.tapMessage, openContextMenu.selectAll, self, openContextMenu.subFrame, nil, nil)
@@ -5757,7 +5757,7 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
                 } else if case .tap = gesture {
                     item.controllerInteraction.clickThroughMessage(self.view, location)
                 } else if case .doubleTap = gesture {
-                    if canAddMessageReactions(message: EngineMessage(item.message)) {
+                    if AyuSettings.current.doubleTapReaction && canAddMessageReactions(message: EngineMessage(item.message)) {
                         item.controllerInteraction.updateMessageReaction(item.message, .default, false, nil)
                     }
                 }
