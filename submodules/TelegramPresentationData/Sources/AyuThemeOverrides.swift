@@ -64,6 +64,9 @@ public func ayuThemeColorEntries(_ theme: PresentationTheme) -> [AyuThemeColorEn
     return result
 }
 
+/// Set when overrides could not be applied; the palette screen shows it.
+public var ayuThemeOverrideLastError: String?
+
 private var ayuOverrideCache: (source: PresentationTheme, overrides: [String: String], result: PresentationTheme)?
 private let ayuOverrideLock = NSLock()
 
@@ -82,6 +85,7 @@ public func ayuApplyThemeOverrides(_ theme: PresentationTheme) -> PresentationTh
     ayuOverrideLock.unlock()
 
     guard let text = encodePresentationTheme(theme) else {
+        ayuThemeOverrideLastError = "Не удалось прочитать текущую тему"
         return theme
     }
     let patched = ayuWalkEncodedTheme(text, { path, value in
@@ -91,6 +95,7 @@ public func ayuApplyThemeOverrides(_ theme: PresentationTheme) -> PresentationTh
         return nil
     })
     guard let data = patched.data(using: .utf8), let result = makePresentationTheme(data: data) else {
+        ayuThemeOverrideLastError = "Не удалось собрать тему с новыми цветами"
         return theme
     }
     ayuOverrideLock.lock()

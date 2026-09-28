@@ -120,6 +120,12 @@ final class AyuPaletteController: ViewController, UITableViewDataSource, UITable
             self.presentationData = presentationData
             self.applyTheme()
             self.reload()
+            if let error = ayuThemeOverrideLastError {
+                ayuThemeOverrideLastError = nil
+                let alert = UIAlertController(title: "Цвет не применился", message: error, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                self.view.window?.rootViewController?.present(alert, animated: true)
+            }
         })
     }
 
@@ -334,6 +340,10 @@ private final class AyuPalettePickerDelegate: NSObject, UIColorPickerViewControl
 
     init(onColor: @escaping (UIColor) -> Void) {
         self.onColor = onColor
+    }
+
+    func colorPickerViewControllerDidSelectColor(_ viewController: UIColorPickerViewController) {
+        self.onColor(viewController.selectedColor)
     }
 
     func colorPickerViewControllerDidFinish(_ viewController: UIColorPickerViewController) {

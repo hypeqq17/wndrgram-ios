@@ -8,6 +8,8 @@ import SwiftSignalKit
 /// an atomic snapshot and only writes take the serial queue.
 public final class AyuSettings {
     public static let shared = AyuSettings()
+    /// Posted on the main queue after every settings change.
+    public static let didChangeNotification = Notification.Name("WndrGramSettingsDidChange")
 
     private let queue = Queue(name: "com.ayugram.settings")
     private let lock = NSLock()
@@ -95,6 +97,9 @@ public final class AyuSettings {
         self.value = newValue
         self.lock.unlock()
         self.promise.set(newValue)
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: AyuSettings.didChangeNotification, object: nil)
+        }
 
         if persist, let url = self.storeURL {
             self.persist(newValue, to: url)
