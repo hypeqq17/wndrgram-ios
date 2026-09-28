@@ -103,6 +103,8 @@ public struct AyuSettingsData: Codable, Equatable {
     public var forwardHideNamesByDefault: Bool = false
     /// Double tap on a message puts the quick reaction.
     public var doubleTapReaction: Bool = true
+    /// Ask before starting a call.
+    public var callConfirmation: Bool = false
     /// Palette editor: theme colour path -> "aarrggbb".
     public var themeOverrides: [String: String] = [:]
     /// Flat, opaque panels instead of Liquid Glass.
@@ -217,6 +219,7 @@ public struct AyuSettingsData: Codable, Equatable {
         self.hidePremiumBadges = b(.hidePremiumBadges, d.hidePremiumBadges)
         self.forwardHideNamesByDefault = b(.forwardHideNamesByDefault, d.forwardHideNamesByDefault)
         self.doubleTapReaction = b(.doubleTapReaction, d.doubleTapReaction)
+        self.callConfirmation = b(.callConfirmation, d.callConfirmation)
         self.themeOverrides = ((try? c.decodeIfPresent([String: String].self, forKey: .themeOverrides)) ?? nil) ?? d.themeOverrides
         self.flatPanels = b(.flatPanels, d.flatPanels)
         self.flatPanelsAlpha = max(0, min(100, i(.flatPanelsAlpha, d.flatPanelsAlpha)))
